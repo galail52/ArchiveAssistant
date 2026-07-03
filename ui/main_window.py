@@ -113,7 +113,11 @@ class MainWindow(QMainWindow):
             )
             return
 
-        self.thumbnail_strip.load_project(self.session.images.files)
+        self.thumbnail_strip.load_project(
+            self.session.images.files,
+            self.session.state_for_file,
+        )
+
         self.refresh_ui()
 
     def refresh_ui(self):

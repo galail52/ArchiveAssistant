@@ -40,7 +40,6 @@ class ReviewSession:
             return
 
         self.state = self.database.load_state(current)
-
         self.database.mark_last_viewed(current)
 
     def save_current_state(self):
@@ -51,6 +50,12 @@ class ReviewSession:
 
         self.database.save_state(current, self.state)
         self.database.mark_last_viewed(current)
+
+    def state_for_file(self, file_path: Path) -> ReviewState:
+        if file_path == self.current_file:
+            return self.state
+
+        return self.database.load_state(file_path)
 
     def next_image(self):
         self.save_current_state()
