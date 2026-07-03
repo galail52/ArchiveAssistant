@@ -65,8 +65,11 @@ class SidePanel(QWidget):
         shortcuts = [
             ("← / →", "Previous / Next"),
             ("Space", "Next Image"),
-            ("A", "Rotate Left"),
-            ("D", "Rotate Right"),
+            ("PgUp/Dn", "Jump 10"),
+            ("Ctrl+←/→", "Jump 50"),
+            ("Home/End", "First / Last"),
+            ("G", "Go To Image"),
+            ("A / D", "Rotate"),
             ("B", "Toggle Back"),
             ("F", "Favorite"),
             ("R", "Restore"),

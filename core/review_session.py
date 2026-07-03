@@ -2,12 +2,14 @@ from pathlib import Path
 
 from core.database import ArchiveDatabase
 from core.image_manager import ImageManager
+from core.navigator import Navigator
 from core.review_state import ReviewState
 
 
 class ReviewSession:
     def __init__(self):
         self.images = ImageManager()
+        self.navigator = Navigator(self.images)
         self.state = ReviewState()
 
         self.database = ArchiveDatabase(
@@ -52,25 +54,28 @@ class ReviewSession:
         self.database.mark_last_viewed(current)
 
     def move(self, offset: int):
-        if self.image_count == 0 or offset == 0:
-            return
-
-        target = self.images.index + offset
-        self.jump_to(target)
+        self.navigate(lambda: self.navigator.move(offset))
 
     def jump_to(self, index: int):
+        self.navigate(lambda: self.navigator.jump_to(index))
+
+    def first(self):
+        self.navigate(self.navigator.first)
+
+    def last(self):
+        self.navigate(self.navigator.last)
+
+    def navigate(self, action):
         if self.image_count == 0:
             return
 
+        previous_file = self.current_file
+
         self.save_current_state()
-        self.images.jump_to(index)
-        self.load_current_state()
+        action()
 
-    def first(self):
-        self.jump_to(0)
-
-    def last(self):
-        self.jump_to(self.image_count - 1)
+        if self.current_file != previous_file:
+            self.load_current_state()
 
     def next_image(self):
         self.move(1)

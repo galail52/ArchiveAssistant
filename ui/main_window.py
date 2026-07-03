@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from core.review_session import ReviewSession
+from ui.dialogs.command_palette import CommandPalette
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
 from ui.side_panel import SidePanel
@@ -92,6 +93,7 @@ class MainWindow(QMainWindow):
             "PageDown": self.jump_forward,
             "Ctrl+Left": self.jump_back_far,
             "Ctrl+Right": self.jump_forward_far,
+            "G": self.open_command_palette,
             "A": self.rotate_left,
             "D": self.rotate_right,
             "B": self.toggle_back,
@@ -218,6 +220,24 @@ class MainWindow(QMainWindow):
 
     def jump_to_image(self, index):
         self.session.jump_to(index)
+        self.refresh_ui()
+
+    def open_command_palette(self):
+        current_num, total = self.session.progress
+
+        if total == 0:
+            return
+
+        target = CommandPalette.get_target(
+            current_num,
+            total,
+            self,
+        )
+
+        if target is None:
+            return
+
+        self.session.jump_to(target - 1)
         self.refresh_ui()
 
     def rotate_left(self):
