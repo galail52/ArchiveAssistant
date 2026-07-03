@@ -51,21 +51,32 @@ class ReviewSession:
         self.database.save_state(current, self.state)
         self.database.mark_last_viewed(current)
 
-    def state_for_file(self, file_path: Path) -> ReviewState:
-        if file_path == self.current_file:
-            return self.state
+    def move(self, offset: int):
+        if self.image_count == 0 or offset == 0:
+            return
 
-        return self.database.load_state(file_path)
+        target = self.images.index + offset
+        self.jump_to(target)
+
+    def jump_to(self, index: int):
+        if self.image_count == 0:
+            return
+
+        self.save_current_state()
+        self.images.jump_to(index)
+        self.load_current_state()
+
+    def first(self):
+        self.jump_to(0)
+
+    def last(self):
+        self.jump_to(self.image_count - 1)
 
     def next_image(self):
-        self.save_current_state()
-        self.images.next()
-        self.load_current_state()
+        self.move(1)
 
     def previous_image(self):
-        self.save_current_state()
-        self.images.previous()
-        self.load_current_state()
+        self.move(-1)
 
     def rotate_left(self):
         self.state.rotate_left()
@@ -91,10 +102,11 @@ class ReviewSession:
         self.state.toggle_delete()
         self.save_current_state()
 
-    def jump_to(self, index):
-        self.save_current_state()
-        self.images.jump_to(index)
-        self.load_current_state()
+    def state_for_file(self, file_path: Path) -> ReviewState:
+        if file_path == self.current_file:
+            return self.state
+
+        return self.database.load_state(file_path)
 
     @property
     def current_file(self):

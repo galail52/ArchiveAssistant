@@ -14,11 +14,9 @@ class ThumbnailStrip(QWidget):
 
         self.files = []
         self.current_index = 0
-        self.cards = []
         self.state_provider = None
-        self.current_range = (None, None)
 
-        self.setFixedHeight(148)
+        self.setFixedHeight(144)
         self.setSizePolicy(
             QSizePolicy.Expanding,
             QSizePolicy.Fixed,
@@ -28,62 +26,59 @@ class ThumbnailStrip(QWidget):
         self.layout.setContentsMargins(8, 4, 8, 4)
         self.layout.setSpacing(5)
 
+        self.cards = [
+            ThumbnailCard()
+            for _ in range(self.WINDOW_SIZE)
+        ]
+
+        for card in self.cards:
+            card.clicked.connect(self.image_selected)
+            self.layout.addWidget(card)
+
+        self.layout.addStretch()
         self.setLayout(self.layout)
+
+        self.clear_cards()
 
     def load_project(self, files, state_provider=None):
         self.files = files
         self.state_provider = state_provider
         self.current_index = 0
-        self.current_range = (None, None)
-        self.rebuild_cards()
+        self.update_cards()
 
     def set_current(self, index):
         if not self.files:
+            self.current_index = 0
+            self.clear_cards()
             return
 
         self.current_index = index
-        visible_range = self.visible_range()
-
-        if visible_range != self.current_range:
-            self.rebuild_cards()
-            return
-
-        self.update_cards()
-
-    def rebuild_cards(self):
-        self.clear_cards()
-
-        if not self.files:
-            return
-
-        start, end = self.visible_range()
-        self.current_range = (start, end)
-
-        for index in range(start, end):
-            card = ThumbnailCard(index)
-            card.set_thumbnail(self.files[index])
-            card.clicked.connect(self.image_selected)
-
-            self.cards.append(card)
-            self.layout.addWidget(card)
-
-        self.layout.addStretch()
         self.update_cards()
 
     def update_cards(self):
-        for card in self.cards:
-            card.set_selected(card.index == self.current_index)
+        if not self.files:
+            self.clear_cards()
+            return
+
+        start, end = self.visible_range()
+
+        for slot, card in enumerate(self.cards):
+            index = start + slot
+
+            if index >= end:
+                card.clear()
+                card.hide()
+                continue
+
+            card.show()
+            card.set_image(index, self.files[index])
+            card.set_selected(index == self.current_index)
             self.apply_flags(card)
 
     def clear_cards(self):
-        while self.layout.count():
-            item = self.layout.takeAt(0)
-            widget = item.widget()
-
-            if widget:
-                widget.deleteLater()
-
-        self.cards.clear()
+        for card in self.cards:
+            card.clear()
+            card.hide()
 
     def visible_range(self):
         start = max(
@@ -105,7 +100,7 @@ class ThumbnailStrip(QWidget):
         return start, end
 
     def apply_flags(self, card):
-        if self.state_provider is None:
+        if self.state_provider is None or card.index is None:
             return
 
         state = self.state_provider(self.files[card.index])

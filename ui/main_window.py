@@ -86,6 +86,12 @@ class MainWindow(QMainWindow):
             "Left": self.previous_image,
             "Right": self.next_image,
             "Space": self.next_image,
+            "Home": self.first_image,
+            "End": self.last_image,
+            "PageUp": self.jump_back,
+            "PageDown": self.jump_forward,
+            "Ctrl+Left": self.jump_back_far,
+            "Ctrl+Right": self.jump_forward_far,
             "A": self.rotate_left,
             "D": self.rotate_right,
             "B": self.toggle_back,
@@ -178,13 +184,36 @@ class MainWindow(QMainWindow):
 
         self.thumbnail_strip.set_current(self.session.images.index)
         self.refresh_status()
+        self.update_buttons()
 
-    def next_image(self):
-        self.session.next_image()
+    def move_images(self, offset):
+        self.session.move(offset)
         self.refresh_ui()
 
+    def next_image(self):
+        self.move_images(1)
+
     def previous_image(self):
-        self.session.previous_image()
+        self.move_images(-1)
+
+    def jump_forward(self):
+        self.move_images(10)
+
+    def jump_back(self):
+        self.move_images(-10)
+
+    def jump_forward_far(self):
+        self.move_images(50)
+
+    def jump_back_far(self):
+        self.move_images(-50)
+
+    def first_image(self):
+        self.session.first()
+        self.refresh_ui()
+
+    def last_image(self):
+        self.session.last()
         self.refresh_ui()
 
     def jump_to_image(self, index):

@@ -10,10 +10,11 @@ class ThumbnailCard(QFrame):
 
     _cache: dict[str, QPixmap] = {}
 
-    def __init__(self, index: int = 0):
+    def __init__(self):
         super().__init__()
 
-        self.index = index
+        self.index: int | None = None
+        self.filename: Path | None = None
         self.selected = False
         self.pixmap = None
 
@@ -22,27 +23,44 @@ class ThumbnailCard(QFrame):
         self.delete = False
         self.back = False
 
-        self.setFixedSize(120, 150)
+        self.setFixedSize(120, 136)
         self.setSizePolicy(
             QSizePolicy.Fixed,
             QSizePolicy.Fixed,
         )
 
-    def set_thumbnail(self, filename: Path):
+    def set_image(self, index: int, filename: Path):
+        if self.index == index and self.filename == filename:
+            return
+
+        self.index = index
+        self.filename = filename
+        self.pixmap = self.load_thumbnail(filename)
+        self.update()
+
+    def clear(self):
+        self.index = None
+        self.filename = None
+        self.selected = False
+        self.pixmap = None
+        self.favorite = False
+        self.restore = False
+        self.delete = False
+        self.back = False
+        self.update()
+
+    def load_thumbnail(self, filename: Path):
         cache_key = str(filename)
 
         if cache_key not in self._cache:
-            pixmap = QPixmap(cache_key).scaled(
+            self._cache[cache_key] = QPixmap(cache_key).scaled(
                 100,
-                100,
+                92,
                 Qt.KeepAspectRatio,
                 Qt.FastTransformation,
             )
 
-            self._cache[cache_key] = pixmap
-
-        self.pixmap = self._cache[cache_key]
-        self.update()
+        return self._cache[cache_key]
 
     def set_selected(self, selected: bool):
         if self.selected == selected:
@@ -74,7 +92,8 @@ class ThumbnailCard(QFrame):
             self.update()
 
     def mousePressEvent(self, event):
-        self.clicked.emit(self.index)
+        if self.index is not None:
+            self.clicked.emit(self.index)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -87,21 +106,22 @@ class ThumbnailCard(QFrame):
 
         if self.pixmap:
             x = (self.width() - self.pixmap.width()) // 2
-            painter.drawPixmap(x, 8, self.pixmap)
+            painter.drawPixmap(x, 6, self.pixmap)
+
+        if self.index is None:
+            return
 
         painter.setPen(Qt.white)
         painter.drawText(
-            self.rect().adjusted(0, 112, 0, 0),
+            self.rect().adjusted(0, 100, 0, 0),
             Qt.AlignCenter,
             str(self.index + 1),
         )
 
-        icons = self.flag_icons()
-
         painter.drawText(
-            self.rect().adjusted(4, 128, -4, 0),
+            self.rect().adjusted(4, 116, -4, 0),
             Qt.AlignCenter,
-            icons,
+            self.flag_icons(),
         )
 
     def flag_icons(self):
