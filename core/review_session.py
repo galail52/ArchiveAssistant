@@ -86,6 +86,11 @@ class ReviewSession:
         self.state.toggle_delete()
         self.save_current_state()
 
+    def jump_to(self, index):
+        self.save_current_state()
+        self.images.jump_to(index)
+        self.load_current_state()
+
     @property
     def current_file(self):
         return self.images.current_file
