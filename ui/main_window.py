@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QPushButton,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -22,6 +23,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Archive Assistant")
         self.resize(1400, 900)
+        self.setMinimumSize(900, 650)
 
         self.session = ReviewSession()
 
@@ -41,21 +43,31 @@ class MainWindow(QMainWindow):
 
     def build_ui(self):
         content = QHBoxLayout()
-        content.addWidget(self.image_panel, 8)
-        content.addWidget(self.side_panel, 2)
+        content.setContentsMargins(0, 0, 0, 0)
+        content.setSpacing(8)
+        content.addWidget(self.image_panel, 1)
+        content.addWidget(self.side_panel)
 
         buttons = QHBoxLayout()
+        buttons.setSpacing(8)
         buttons.addWidget(self.previous_button)
         buttons.addWidget(self.next_button)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(6, 6, 6, 6)
+        layout.setSpacing(6)
         layout.addWidget(self.header_panel)
-        layout.addLayout(content)
+        layout.addLayout(content, 1)
         layout.addWidget(self.thumbnail_strip)
         layout.addLayout(buttons)
 
         container = QWidget()
         container.setLayout(layout)
+        container.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Expanding,
+        )
+
         self.setCentralWidget(container)
 
     def create_menu(self):
