@@ -13,6 +13,7 @@ from core.review_session import ReviewSession
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
 from ui.side_panel import SidePanel
+from ui.widgets.thumbnail_strip import ThumbnailStrip
 
 
 class MainWindow(QMainWindow):
@@ -27,6 +28,7 @@ class MainWindow(QMainWindow):
         self.header_panel = HeaderPanel()
         self.image_panel = ImagePanel()
         self.side_panel = SidePanel()
+        self.thumbnail_strip = ThumbnailStrip()
 
         self.previous_button = QPushButton("◀ Previous")
         self.next_button = QPushButton("Next ▶")
@@ -34,7 +36,7 @@ class MainWindow(QMainWindow):
         self.build_ui()
         self.create_menu()
         self.create_shortcuts()
-        self.connect_buttons()
+        self.connect_controls()
         self.refresh_ui()
 
     def build_ui(self):
@@ -49,6 +51,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.addWidget(self.header_panel)
         layout.addLayout(content)
+        layout.addWidget(self.thumbnail_strip)
         layout.addLayout(buttons)
 
         container = QWidget()
@@ -77,6 +80,7 @@ class MainWindow(QMainWindow):
             "F": self.toggle_favorite,
             "R": self.toggle_restore,
             "X": self.toggle_delete,
+            "Esc": self.close,
         }
 
         for key, callback in bindings.items():
@@ -85,9 +89,10 @@ class MainWindow(QMainWindow):
             action.triggered.connect(callback)
             self.addAction(action)
 
-    def connect_buttons(self):
+    def connect_controls(self):
         self.previous_button.clicked.connect(self.previous_image)
         self.next_button.clicked.connect(self.next_image)
+        self.thumbnail_strip.image_selected.connect(self.jump_to_image)
 
     def open_project(self):
         folder = QFileDialog.getExistingDirectory(
@@ -108,6 +113,7 @@ class MainWindow(QMainWindow):
             )
             return
 
+        self.thumbnail_strip.load_project(self.session.images.files)
         self.refresh_ui()
 
     def refresh_ui(self):
@@ -127,6 +133,8 @@ class MainWindow(QMainWindow):
             total,
             self.session.stats,
         )
+
+        self.thumbnail_strip.set_current(self.session.images.index)
 
         self.refresh_status()
         self.update_buttons()
@@ -152,6 +160,7 @@ class MainWindow(QMainWindow):
             self.session.stats,
         )
 
+        self.thumbnail_strip.set_current(self.session.images.index)
         self.refresh_status()
 
     def next_image(self):
@@ -160,6 +169,10 @@ class MainWindow(QMainWindow):
 
     def previous_image(self):
         self.session.previous_image()
+        self.refresh_ui()
+
+    def jump_to_image(self, index):
+        self.session.jump_to(index)
         self.refresh_ui()
 
     def rotate_left(self):
