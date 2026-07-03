@@ -1,6 +1,7 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QHBoxLayout, QSizePolicy, QWidget
 
+from core.thumbnail_cache import ThumbnailCache
 from ui.widgets.thumbnail_card import ThumbnailCard
 
 
@@ -15,6 +16,7 @@ class ThumbnailStrip(QWidget):
         self.files = []
         self.current_index = 0
         self.state_provider = None
+        self.thumbnail_cache = ThumbnailCache(max_items=500)
 
         self.setFixedHeight(144)
         self.setSizePolicy(
@@ -27,7 +29,7 @@ class ThumbnailStrip(QWidget):
         self.layout.setSpacing(5)
 
         self.cards = [
-            ThumbnailCard()
+            ThumbnailCard(self.thumbnail_cache)
             for _ in range(self.WINDOW_SIZE)
         ]
 
@@ -44,6 +46,7 @@ class ThumbnailStrip(QWidget):
         self.files = files
         self.state_provider = state_provider
         self.current_index = 0
+        self.thumbnail_cache.clear()
         self.update_cards()
 
     def set_current(self, index):
@@ -61,6 +64,8 @@ class ThumbnailStrip(QWidget):
             return
 
         start, end = self.visible_range()
+        visible_files = self.files[start:end]
+        self.thumbnail_cache.preload(visible_files)
 
         for slot, card in enumerate(self.cards):
             index = start + slot

@@ -1,17 +1,17 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QPainter, QPixmap
+from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import QFrame, QSizePolicy
 
 
 class ThumbnailCard(QFrame):
     clicked = Signal(int)
 
-    _cache: dict[str, QPixmap] = {}
-
-    def __init__(self):
+    def __init__(self, thumbnail_cache):
         super().__init__()
+
+        self.thumbnail_cache = thumbnail_cache
 
         self.index: int | None = None
         self.filename: Path | None = None
@@ -35,7 +35,8 @@ class ThumbnailCard(QFrame):
 
         self.index = index
         self.filename = filename
-        self.pixmap = self.load_thumbnail(filename)
+        self.pixmap = self.thumbnail_cache.get(filename)
+        self.setToolTip(filename.name)
         self.update()
 
     def clear(self):
@@ -47,20 +48,8 @@ class ThumbnailCard(QFrame):
         self.restore = False
         self.delete = False
         self.back = False
+        self.setToolTip("")
         self.update()
-
-    def load_thumbnail(self, filename: Path):
-        cache_key = str(filename)
-
-        if cache_key not in self._cache:
-            self._cache[cache_key] = QPixmap(cache_key).scaled(
-                100,
-                92,
-                Qt.KeepAspectRatio,
-                Qt.FastTransformation,
-            )
-
-        return self._cache[cache_key]
 
     def set_selected(self, selected: bool):
         if self.selected == selected:
