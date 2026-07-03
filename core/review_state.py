@@ -71,3 +71,15 @@ class ReviewState:
     def toggle_delete(self):
 
         self.delete = not self.delete
+
+        # -----------------------------------------------------
+
+    def as_dict(self):
+
+        return {
+            "rotation": self.rotation,
+            "back": self.has_back,
+            "favorite": self.favorite,
+            "restore": self.needs_restore,
+            "delete": self.delete,
+        }
