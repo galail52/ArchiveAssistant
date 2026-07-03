@@ -14,47 +14,63 @@ class StatusCard(QFrame):
         self.title = QLabel(title)
         self.value = QLabel("NO")
         self.build_ui()
+        self.set_active(False)
 
     def build_ui(self):
         self.setFrameShape(QFrame.StyledPanel)
-
-        self.setStyleSheet("""
-            QFrame {
-                background-color:#363636;
-                border:1px solid #4a4a4a;
-                border-radius:8px;
-            }
-
-            QLabel {
-                border:none;
-                background:transparent;
-            }
-        """)
 
         self.title.setAlignment(Qt.AlignCenter)
         self.title.setStyleSheet("""
             font-size:12pt;
             font-weight:bold;
+            border:none;
+            background:transparent;
         """)
 
         self.value.setAlignment(Qt.AlignCenter)
-        self.value.setStyleSheet("""
-            font-size:18pt;
-            font-weight:bold;
-            color:#9e9e9e;
-        """)
 
         layout = QVBoxLayout()
         layout.addWidget(self.title)
         layout.addWidget(self.value)
         self.setLayout(layout)
 
-    def set_value(self, text: str, color: str = "#9e9e9e"):
+    def set_value(
+        self,
+        text: str,
+        active: bool = False,
+        accent: str = "#7fc8ff",
+    ):
         self.value.setText(text)
+        self.set_active(active, accent)
+
+    def set_active(
+        self,
+        active: bool,
+        accent: str = "#7fc8ff",
+    ):
+        border = accent if active else "#4a4a4a"
+        background = "#3f3f3f" if active else "#363636"
+        value_color = accent if active else "#9e9e9e"
+
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color:{background};
+                border:2px solid {border};
+                border-radius:8px;
+            }}
+
+            QLabel {{
+                border:none;
+                background:transparent;
+            }}
+        """)
+
         self.value.setStyleSheet(f"""
             font-size:18pt;
             font-weight:bold;
-            color:{color};
+            color:{value_color};
+            border:none;
+            background:transparent;
         """)
 
 
@@ -141,24 +157,42 @@ class SidePanel(QWidget):
         restore=False,
         delete=False,
     ):
-        self.rotation.set_value(f"{rotation}°", "#7fc8ff")
+        self.rotation.set_value(
+            self.rotation_label(rotation),
+            active=rotation != 0,
+            accent="#7fc8ff",
+        )
 
         self.back.set_value(
             "YES" if back else "NO",
-            "#55ff55" if back else "#9e9e9e",
+            active=back,
+            accent="#55ff55",
         )
 
         self.favorite.set_value(
             "YES" if favorite else "NO",
-            "#ffd54a" if favorite else "#9e9e9e",
+            active=favorite,
+            accent="#ffd54a",
         )
 
         self.restore.set_value(
             "YES" if restore else "NO",
-            "#ffb347" if restore else "#9e9e9e",
+            active=restore,
+            accent="#ffb347",
         )
 
         self.delete.set_value(
             "YES" if delete else "NO",
-            "#ff6666" if delete else "#9e9e9e",
+            active=delete,
+            accent="#ff6666",
         )
+
+    def rotation_label(self, rotation: int) -> str:
+        labels = {
+            0: "Normal",
+            90: "Right",
+            180: "Upside Down",
+            270: "Left",
+        }
+
+        return labels.get(rotation % 360, f"{rotation}°")

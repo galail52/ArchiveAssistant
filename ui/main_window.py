@@ -4,6 +4,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
+    QPushButton,
     QVBoxLayout,
     QWidget,
 )
@@ -27,9 +28,13 @@ class MainWindow(QMainWindow):
         self.image_panel = ImagePanel()
         self.side_panel = SidePanel()
 
+        self.previous_button = QPushButton("◀ Previous")
+        self.next_button = QPushButton("Next ▶")
+
         self.build_ui()
         self.create_menu()
         self.create_shortcuts()
+        self.connect_buttons()
         self.refresh_ui()
 
     def build_ui(self):
@@ -37,9 +42,14 @@ class MainWindow(QMainWindow):
         content.addWidget(self.image_panel, 8)
         content.addWidget(self.side_panel, 2)
 
+        buttons = QHBoxLayout()
+        buttons.addWidget(self.previous_button)
+        buttons.addWidget(self.next_button)
+
         layout = QVBoxLayout()
         layout.addWidget(self.header_panel)
         layout.addLayout(content)
+        layout.addLayout(buttons)
 
         container = QWidget()
         container.setLayout(layout)
@@ -74,6 +84,10 @@ class MainWindow(QMainWindow):
             action.setShortcut(QKeySequence(key))
             action.triggered.connect(callback)
             self.addAction(action)
+
+    def connect_buttons(self):
+        self.previous_button.clicked.connect(self.previous_image)
+        self.next_button.clicked.connect(self.next_image)
 
     def open_project(self):
         folder = QFileDialog.getExistingDirectory(
@@ -111,18 +125,34 @@ class MainWindow(QMainWindow):
             self.session.project_name,
             current_num,
             total,
+            self.session.stats,
         )
 
         self.refresh_status()
+        self.update_buttons()
 
     def refresh_status(self):
         self.side_panel.update_status(
-            rotation=self.session.state.rotation,
-            back=self.session.state.has_back,
-            favorite=self.session.state.favorite,
-            restore=self.session.state.needs_restore,
-            delete=self.session.state.delete,
+            **self.session.state.as_dict()
         )
+
+    def update_buttons(self):
+        current_num, total = self.session.progress
+
+        self.previous_button.setEnabled(current_num > 1)
+        self.next_button.setEnabled(current_num < total)
+
+    def refresh_after_action(self):
+        current_num, total = self.session.progress
+
+        self.header_panel.update_progress(
+            self.session.project_name,
+            current_num,
+            total,
+            self.session.stats,
+        )
+
+        self.refresh_status()
 
     def next_image(self):
         self.session.next_image()
@@ -135,25 +165,25 @@ class MainWindow(QMainWindow):
     def rotate_left(self):
         self.session.rotate_left()
         self.image_panel.set_rotation(self.session.state.rotation)
-        self.refresh_status()
+        self.refresh_after_action()
 
     def rotate_right(self):
         self.session.rotate_right()
         self.image_panel.set_rotation(self.session.state.rotation)
-        self.refresh_status()
+        self.refresh_after_action()
 
     def toggle_back(self):
         self.session.toggle_back()
-        self.refresh_status()
+        self.refresh_after_action()
 
     def toggle_favorite(self):
         self.session.toggle_favorite()
-        self.refresh_status()
+        self.refresh_after_action()
 
     def toggle_restore(self):
         self.session.toggle_restore()
-        self.refresh_status()
+        self.refresh_after_action()
 
     def toggle_delete(self):
         self.session.toggle_delete()
-        self.refresh_status()
+        self.refresh_after_action()
