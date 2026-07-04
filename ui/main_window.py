@@ -110,6 +110,9 @@ class MainWindow(QMainWindow):
             "2": self.zoom_100,
             "3": self.zoom_200,
             "4": self.zoom_400,
+            "+": self.zoom_in,
+            "=": self.zoom_in,
+            "-": self.zoom_out,
             "A": self.rotate_left,
             "D": self.rotate_right,
             "B": self.toggle_back,
@@ -215,6 +218,11 @@ class MainWindow(QMainWindow):
         self.update_buttons()
         self.image_panel.update()
 
+    def refresh_after_view_action(self):
+        self.image_panel.clamp_pan()
+        self.image_panel.update()
+        self.refresh_status()
+
     def move_images(self, offset):
         self.session.move(offset)
         self.refresh_ui()
@@ -269,23 +277,27 @@ class MainWindow(QMainWindow):
 
     def zoom_fit(self):
         self.session.set_zoom_fit()
-        self.image_panel.update()
-        self.refresh_status()
+        self.refresh_after_view_action()
 
     def zoom_100(self):
         self.session.set_zoom_percent(100)
-        self.image_panel.update()
-        self.refresh_status()
+        self.refresh_after_view_action()
 
     def zoom_200(self):
         self.session.set_zoom_percent(200)
-        self.image_panel.update()
-        self.refresh_status()
+        self.refresh_after_view_action()
 
     def zoom_400(self):
         self.session.set_zoom_percent(400)
-        self.image_panel.update()
-        self.refresh_status()
+        self.refresh_after_view_action()
+
+    def zoom_in(self):
+        self.session.zoom_in()
+        self.refresh_after_view_action()
+
+    def zoom_out(self):
+        self.session.zoom_out()
+        self.refresh_after_view_action()
 
     def pan_left(self):
         self.pan_view(-self.PAN_STEP, 0)
@@ -301,9 +313,7 @@ class MainWindow(QMainWindow):
 
     def pan_view(self, dx, dy):
         self.session.pan_view(dx, dy)
-        self.image_panel.clamp_pan()
-        self.image_panel.update()
-        self.refresh_status()
+        self.refresh_after_view_action()
 
     def rotate_left(self):
         self.session.rotate_left()
@@ -323,6 +333,7 @@ class MainWindow(QMainWindow):
 
     def toggle_restore(self):
         self.session.toggle_restore()
+
         self.refresh_after_action()
 
     def toggle_delete(self):

@@ -38,8 +38,21 @@ class ViewState:
 
     def set_zoom_percent(self, percent: int):
         self.zoom_mode = "percent"
-        self.zoom_percent = max(1, int(percent))
+        self.zoom_percent = max(10, min(int(percent), 800))
         self.reset_pan()
+
+    def zoom_in(self):
+        if self.is_fit:
+            self.set_zoom_percent(100)
+            return
+
+        self.set_zoom_percent(self.zoom_percent + 25)
+
+    def zoom_out(self):
+        if self.is_fit:
+            return
+
+        self.set_zoom_percent(self.zoom_percent - 25)
 
     def pan(self, dx: int, dy: int):
         if self.is_fit:

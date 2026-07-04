@@ -68,6 +68,7 @@ class SidePanel(QWidget):
             "G           Go To\n"
             "1           Fit\n"
             "2 / 3 / 4   100 / 200 / 400\n"
+            "+ / -       Zoom In / Out\n"
             "Shift+Arr   Pan\n"
             "A / D       Rotate\n"
             "B           Back\n"

@@ -98,6 +98,12 @@ class ReviewSession:
     def set_zoom_percent(self, percent: int):
         self.view_state.set_zoom_percent(percent)
 
+    def zoom_in(self):
+        self.view_state.zoom_in()
+
+    def zoom_out(self):
+        self.view_state.zoom_out()
+
     def pan_view(self, dx: int, dy: int):
         self.view_state.pan(dx, dy)
 
