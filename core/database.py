@@ -1,3 +1,4 @@
+import shutil
 import sqlite3
 from pathlib import Path
 
@@ -9,11 +10,37 @@ class ArchiveDatabase:
         self.db_path = db_path
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
+        self.backup_database()
+
         self.connection = sqlite3.connect(self.db_path)
         self.connection.row_factory = sqlite3.Row
 
         self.create_tables()
         self.migrate_tables()
+
+    def backup_database(self):
+        if not self.db_path.exists():
+            return
+
+        backup1 = self.db_path.with_suffix(
+            self.db_path.suffix + ".backup1"
+        )
+        backup2 = self.db_path.with_suffix(
+            self.db_path.suffix + ".backup2"
+        )
+
+        if backup2.exists():
+            backup2.unlink()
+
+        if backup1.exists():
+            backup1.rename(backup2)
+
+        shutil.copy2(self.db_path, backup1)
+
+        if backup1.stat().st_size != self.db_path.stat().st_size:
+            raise RuntimeError(
+                "Database backup failed size verification."
+            )
 
     def create_tables(self):
         self.connection.execute(
