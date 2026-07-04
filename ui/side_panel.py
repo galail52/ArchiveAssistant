@@ -11,8 +11,10 @@ from ui.widgets.status_card import StatusCard
 
 
 class SidePanel(QWidget):
-    def __init__(self):
+    def __init__(self, keyboard_help=""):
         super().__init__()
+
+        self.keyboard_help = keyboard_help
 
         self.zoom = StatusCard("🔎 Zoom")
         self.pan = StatusCard("↔ Pan")
@@ -59,26 +61,7 @@ class SidePanel(QWidget):
         """)
         layout.addWidget(keyboard_title)
 
-        keyboard = QLabel(
-            "Ctrl+O      Open Project\n"
-            "← / →       Prev / Next\n"
-            "Space       Next\n"
-            "PgUp/Dn     Jump 10\n"
-            "Ctrl+←/→    Jump 50\n"
-            "Home/End    First / Last\n"
-            "G           Go To\n"
-            "1           Fit\n"
-            "2 / 3 / 4   100 / 200 / 400\n"
-            "+ / -       Zoom In / Out\n"
-            "Shift+Arr   Pan\n"
-            "A / D       Rotate\n"
-            "B           Back\n"
-            "F           Favorite\n"
-            "R           Restore\n"
-            "X           Delete\n"
-            "Esc         Exit"
-        )
-
+        keyboard = QLabel(self.keyboard_help)
         keyboard.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         keyboard.setSizePolicy(
             QSizePolicy.Expanding,

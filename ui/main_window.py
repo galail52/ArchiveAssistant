@@ -40,7 +40,10 @@ class MainWindow(QMainWindow):
 
         self.header_panel = HeaderPanel()
         self.image_panel = ImagePanel(self.session)
-        self.side_panel = SidePanel()
+        self.keyboard_manager.register_shortcuts()
+        self.side_panel = SidePanel(
+            self.keyboard_manager.help_text()
+        )
         self.thumbnail_strip = ThumbnailStrip()
 
         self.previous_button = QPushButton("◀ Previous")
@@ -48,7 +51,6 @@ class MainWindow(QMainWindow):
 
         self.build_ui()
         self.create_menu()
-        self.keyboard_manager.register_shortcuts()
         self.connect_controls()
         self.refresh_ui()
 
