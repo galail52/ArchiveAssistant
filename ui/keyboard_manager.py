@@ -30,6 +30,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "project.database_stats",
+            "Database Stats",
+            self.window.show_database_stats,
+            None,
+            "Project",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.goto_image",
             "Go To Image",
             self.window.open_go_to_image,

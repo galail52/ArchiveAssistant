@@ -297,6 +297,37 @@ class MainWindow(QMainWindow):
         self.session.jump_to(index)
         self.refresh_ui()
 
+    def jump_to_first_unreviewed(self):
+        if self.session.jump_to_first_unreviewed():
+            self.refresh_ui()
+
+    def show_database_stats(self):
+        stats = self.session.stats
+        total = stats["total"]
+
+        if total:
+            reviewed_percent = round(
+                (stats["reviewed"] / total) * 100,
+                1,
+            )
+        else:
+            reviewed_percent = 0
+
+        QMessageBox.information(
+            self,
+            "Database Stats",
+            (
+                f"Project: {self.session.project_name}\n\n"
+                f"Total photos: {stats['total']}\n"
+                f"Reviewed: {stats['reviewed']} "
+                f"({reviewed_percent}%)\n\n"
+                f"Backs: {stats['backs']}\n"
+                f"Favorites: {stats['favorites']}\n"
+                f"Restore: {stats['restore']}\n"
+                f"Deletes: {stats['deletes']}"
+            ),
+        )
+
     def zoom_fit(self):
         self.session.set_zoom_fit()
         self.refresh_after_view_action()
@@ -360,7 +391,3 @@ class MainWindow(QMainWindow):
     def toggle_delete(self):
         self.session.toggle_delete()
         self.refresh_after_action()
-
-    def jump_to_first_unreviewed(self):
-        if self.session.jump_to_first_unreviewed():
-            self.refresh_ui()
