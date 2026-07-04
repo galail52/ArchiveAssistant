@@ -93,6 +93,10 @@ class MainWindow(QMainWindow):
             "PageDown": self.jump_forward,
             "Ctrl+Left": self.jump_back_far,
             "Ctrl+Right": self.jump_forward_far,
+            "Shift+Left": self.pan_left,
+            "Shift+Right": self.pan_right,
+            "Shift+Up": self.pan_up,
+            "Shift+Down": self.pan_down,
             "G": self.open_command_palette,
             "1": self.zoom_fit,
             "2": self.zoom_100,
@@ -255,6 +259,18 @@ class MainWindow(QMainWindow):
 
     def zoom_400(self):
         self.image_panel.set_zoom_scale(4.0)
+
+    def pan_left(self):
+        self.image_panel.pan_left()
+
+    def pan_right(self):
+        self.image_panel.pan_right()
+
+    def pan_up(self):
+        self.image_panel.pan_up()
+
+    def pan_down(self):
+        self.image_panel.pan_down()
 
     def rotate_left(self):
         self.session.rotate_left()
