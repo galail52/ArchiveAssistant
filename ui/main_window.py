@@ -106,6 +106,22 @@ class MainWindow(QMainWindow):
     def has_images(self):
         return self.session.image_count > 0
 
+    def has_previous_image(self):
+        current_num, _total = self.session.progress
+        return current_num > 1
+
+    def has_next_image(self):
+        current_num, total = self.session.progress
+        return current_num < total
+
+    def can_jump_back(self):
+        current_num, _total = self.session.progress
+        return current_num > 1
+
+    def can_jump_forward(self):
+        current_num, total = self.session.progress
+        return current_num < total
+
     def last_project_folder(self):
         return self.settings.value(
             "last_project_folder",
@@ -173,10 +189,8 @@ class MainWindow(QMainWindow):
         )
 
     def update_buttons(self):
-        current_num, total = self.session.progress
-
-        self.previous_button.setEnabled(current_num > 1)
-        self.next_button.setEnabled(current_num < total)
+        self.previous_button.setEnabled(self.has_previous_image())
+        self.next_button.setEnabled(self.has_next_image())
 
     def refresh_after_action(self):
         current_num, total = self.session.progress

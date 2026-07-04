@@ -24,7 +24,7 @@ class KeyboardManager:
             self.window.previous_image,
             "Left",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.has_previous_image,
             help_key="← / →",
             help_name="Prev / Next",
         )
@@ -34,7 +34,7 @@ class KeyboardManager:
             self.window.next_image,
             "Right",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.has_next_image,
             show_in_help=False,
         )
         self.register(
@@ -43,7 +43,7 @@ class KeyboardManager:
             self.window.next_image,
             "Space",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.has_next_image,
             help_name="Next",
         )
         self.register(
@@ -52,7 +52,7 @@ class KeyboardManager:
             self.window.jump_back,
             "PageUp",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.can_jump_back,
             help_key="PgUp/Dn",
             help_name="Jump 10",
         )
@@ -62,7 +62,7 @@ class KeyboardManager:
             self.window.jump_forward,
             "PageDown",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.can_jump_forward,
             show_in_help=False,
         )
         self.register(
@@ -71,7 +71,7 @@ class KeyboardManager:
             self.window.jump_back_far,
             "Ctrl+Left",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.can_jump_back,
             help_key="Ctrl+←/→",
             help_name="Jump 50",
         )
@@ -81,7 +81,7 @@ class KeyboardManager:
             self.window.jump_forward_far,
             "Ctrl+Right",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.can_jump_forward,
             show_in_help=False,
         )
         self.register(
@@ -90,7 +90,7 @@ class KeyboardManager:
             self.window.first_image,
             "Home",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.has_previous_image,
             help_key="Home/End",
             help_name="First / Last",
         )
@@ -100,7 +100,7 @@ class KeyboardManager:
             self.window.last_image,
             "End",
             "Navigation",
-            enabled=self.window.has_images,
+            enabled=self.window.has_next_image,
             show_in_help=False,
         )
         self.register(
