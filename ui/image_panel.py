@@ -11,6 +11,7 @@ class ImagePanel(QWidget):
 
         self.current_pixmap: QPixmap | None = None
         self.rotation: int = 0
+        self.zoom_scale: float | None = None
 
         self.setSizePolicy(
             QSizePolicy.Expanding,
@@ -32,6 +33,14 @@ class ImagePanel(QWidget):
         self.rotation = rotation
         self.update()
 
+    def set_zoom_fit(self):
+        self.zoom_scale = None
+        self.update()
+
+    def set_zoom_scale(self, scale: float):
+        self.zoom_scale = scale
+        self.update()
+
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.fillRect(self.rect(), QColor("#1f1f1f"))
@@ -44,11 +53,19 @@ class ImagePanel(QWidget):
             Qt.SmoothTransformation,
         )
 
-        pixmap = pixmap.scaled(
-            self.size() * 0.96,
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation,
-        )
+        if self.zoom_scale is None:
+            pixmap = pixmap.scaled(
+                self.size() * 0.96,
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation,
+            )
+        else:
+            pixmap = pixmap.scaled(
+                int(pixmap.width() * self.zoom_scale),
+                int(pixmap.height() * self.zoom_scale),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation,
+            )
 
         x = (self.width() - pixmap.width()) // 2
         y = (self.height() - pixmap.height()) // 2

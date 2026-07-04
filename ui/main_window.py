@@ -94,6 +94,10 @@ class MainWindow(QMainWindow):
             "Ctrl+Left": self.jump_back_far,
             "Ctrl+Right": self.jump_forward_far,
             "G": self.open_command_palette,
+            "1": self.zoom_fit,
+            "2": self.zoom_100,
+            "3": self.zoom_200,
+            "4": self.zoom_400,
             "A": self.rotate_left,
             "D": self.rotate_right,
             "B": self.toggle_back,
@@ -239,6 +243,18 @@ class MainWindow(QMainWindow):
 
         self.session.jump_to(target - 1)
         self.refresh_ui()
+
+    def zoom_fit(self):
+        self.image_panel.set_zoom_fit()
+
+    def zoom_100(self):
+        self.image_panel.set_zoom_scale(1.0)
+
+    def zoom_200(self):
+        self.image_panel.set_zoom_scale(2.0)
+
+    def zoom_400(self):
+        self.image_panel.set_zoom_scale(4.0)
 
     def rotate_left(self):
         self.session.rotate_left()
