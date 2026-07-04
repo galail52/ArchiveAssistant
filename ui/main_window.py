@@ -360,3 +360,7 @@ class MainWindow(QMainWindow):
     def toggle_delete(self):
         self.session.toggle_delete()
         self.refresh_after_action()
+
+    def jump_to_first_unreviewed(self):
+        if self.session.jump_to_first_unreviewed():
+            self.refresh_ui()

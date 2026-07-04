@@ -50,6 +50,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "nav.first_unreviewed",
+            "First Unreviewed",
+            self.window.jump_to_first_unreviewed,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.previous",
             "Previous Image",
             self.window.previous_image,

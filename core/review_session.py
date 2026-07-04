@@ -62,11 +62,27 @@ class ReviewSession:
         self.database.save_state(current, self.review_state)
         self.database.mark_last_viewed(current)
 
+    def mark_current_reviewed(self):
+        current = self.current_file
+
+        if current is None:
+            return
+
+        self.database.mark_reviewed(current)
+
     def move(self, offset: int):
         self.navigate(lambda: self.navigator.move(offset))
 
     def jump_to(self, index: int):
         self.navigate(lambda: self.navigator.jump_to(index))
+
+    def jump_to_first_unreviewed(self):
+        for index, file_path in enumerate(self.images.files):
+            if not self.database.is_reviewed(file_path):
+                self.jump_to(index)
+                return True
+
+        return False
 
     def first(self):
         self.navigate(self.navigator.first)
@@ -84,6 +100,7 @@ class ReviewSession:
         action()
 
         if self.current_file != previous_file:
+            self.database.mark_reviewed(previous_file)
             self.load_current_state()
 
     def next_image(self):

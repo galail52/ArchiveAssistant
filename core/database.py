@@ -13,6 +13,7 @@ class ArchiveDatabase:
         self.connection.row_factory = sqlite3.Row
 
         self.create_tables()
+        self.migrate_tables()
 
     def create_tables(self):
         self.connection.execute(
@@ -42,6 +43,24 @@ class ArchiveDatabase:
             )
             """
         )
+
+        self.connection.commit()
+
+    def migrate_tables(self):
+        columns = {
+            row["name"]
+            for row in self.connection.execute(
+                "PRAGMA table_info(photos)"
+            ).fetchall()
+        }
+
+        if "reviewed" not in columns:
+            self.connection.execute(
+                """
+                ALTER TABLE photos
+                ADD COLUMN reviewed INTEGER NOT NULL DEFAULT 0
+                """
+            )
 
         self.connection.commit()
 
@@ -100,7 +119,6 @@ class ArchiveDatabase:
                 favorite = ?,
                 needs_restore = ?,
                 delete_flag = ?,
-                reviewed = 1,
                 updated_at = CURRENT_TIMESTAMP
             WHERE file_path = ?
             """,
@@ -115,6 +133,34 @@ class ArchiveDatabase:
         )
 
         self.connection.commit()
+
+    def mark_reviewed(self, file_path: Path):
+        self.connection.execute(
+            """
+            UPDATE photos
+            SET reviewed = 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE file_path = ?
+            """,
+            (str(file_path),),
+        )
+
+        self.connection.commit()
+
+    def is_reviewed(self, file_path: Path):
+        row = self.connection.execute(
+            """
+            SELECT reviewed
+            FROM photos
+            WHERE file_path = ?
+            """,
+            (str(file_path),),
+        ).fetchone()
+
+        if row is None:
+            return False
+
+        return bool(row["reviewed"])
 
     def mark_last_viewed(self, file_path: Path):
         self.connection.execute(
