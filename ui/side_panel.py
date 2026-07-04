@@ -1,7 +1,6 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLabel,
-    QGridLayout,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -24,15 +23,11 @@ class SidePanel(QWidget):
         self.update_status()
 
     def build_ui(self):
-        self.setMinimumWidth(260)
-        self.setSizePolicy(
-            QSizePolicy.Fixed,
-            QSizePolicy.Expanding,
-        )
+        self.setFixedWidth(330)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(8, 6, 8, 6)
-        layout.setSpacing(6)
+        layout.setContentsMargins(12, 8, 12, 8)
+        layout.setSpacing(7)
 
         title = QLabel("Review")
         title.setAlignment(Qt.AlignCenter)
@@ -44,8 +39,8 @@ class SidePanel(QWidget):
         layout.addWidget(title)
 
         for card in self.status_cards:
-            card.setMinimumHeight(58)
-            card.setMaximumHeight(68)
+            card.setMinimumHeight(56)
+            card.setMaximumHeight(62)
             layout.addWidget(card)
 
         keyboard_title = QLabel("Keyboard")
@@ -58,37 +53,34 @@ class SidePanel(QWidget):
 
         layout.addWidget(keyboard_title)
 
-        keyboard = QGridLayout()
-        keyboard.setHorizontalSpacing(14)
-        keyboard.setVerticalSpacing(2)
+        keyboard = QLabel(
+            "← / →       Previous / Next\n"
+            "Space       Next Image\n"
+            "PgUp/Dn     Jump 10\n"
+            "Ctrl+←/→    Jump 50\n"
+            "Home/End    First / Last\n"
+            "G           Go To Image\n"
+            "A / D       Rotate\n"
+            "B           Toggle Back\n"
+            "F           Favorite\n"
+            "R           Restore\n"
+            "X           Delete\n"
+            "Esc         Exit"
+        )
 
-        shortcuts = [
-            ("← / →", "Previous / Next"),
-            ("Space", "Next Image"),
-            ("PgUp/Dn", "Jump 10"),
-            ("Ctrl+←/→", "Jump 50"),
-            ("Home/End", "First / Last"),
-            ("G", "Go To Image"),
-            ("A / D", "Rotate"),
-            ("B", "Toggle Back"),
-            ("F", "Favorite"),
-            ("R", "Restore"),
-            ("X", "Delete"),
-            ("Esc", "Exit"),
-        ]
+        keyboard.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        keyboard.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Fixed,
+        )
+        keyboard.setStyleSheet("""
+            font-family:Consolas, monospace;
+            font-size:10pt;
+            line-height:105%;
+            color:#bdbdbd;
+        """)
 
-        for row, (key, desc) in enumerate(shortcuts):
-            key_label = QLabel(key)
-            key_label.setStyleSheet(
-                "font-weight:bold;color:#7fc8ff;"
-            )
-
-            desc_label = QLabel(desc)
-
-            keyboard.addWidget(key_label, row, 0)
-            keyboard.addWidget(desc_label, row, 1)
-
-        layout.addLayout(keyboard)
+        layout.addWidget(keyboard)
         layout.addStretch()
 
         self.setLayout(layout)
