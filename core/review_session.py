@@ -94,14 +94,6 @@ class ReviewSession:
         self.database.save_state(current, self.review_state)
         self.database.mark_last_viewed(current)
 
-    def mark_current_reviewed(self):
-        current = self.current_file
-
-        if current is None:
-            return
-
-        self.database.mark_reviewed(current)
-
     def move(self, offset: int):
         self.navigate(lambda: self.navigator.move(offset))
 
@@ -111,6 +103,49 @@ class ReviewSession:
     def jump_to_first_unreviewed(self):
         for index, file_path in enumerate(self.images.files):
             if not self.database.is_reviewed(file_path):
+                self.jump_to(index)
+                return True
+
+        return False
+
+    def jump_to_next_unreviewed(self):
+        return self.jump_to_next_matching(
+            lambda file_path, _state: not self.database.is_reviewed(file_path)
+        )
+
+    def jump_to_next_favorite(self):
+        return self.jump_to_next_matching(
+            lambda _file_path, state: state.favorite
+        )
+
+    def jump_to_next_restore(self):
+        return self.jump_to_next_matching(
+            lambda _file_path, state: state.needs_restore
+        )
+
+    def jump_to_next_back(self):
+        return self.jump_to_next_matching(
+            lambda _file_path, state: state.has_back
+        )
+
+    def jump_to_next_delete(self):
+        return self.jump_to_next_matching(
+            lambda _file_path, state: state.delete
+        )
+
+    def jump_to_next_matching(self, predicate):
+        if self.image_count == 0:
+            return False
+
+        start = self.images.index
+        count = self.image_count
+
+        for step in range(1, count + 1):
+            index = (start + step) % count
+            file_path = self.images.files[index]
+            state = self.database.load_state(file_path)
+
+            if predicate(file_path, state):
                 self.jump_to(index)
                 return True
 

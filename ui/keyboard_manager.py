@@ -82,6 +82,56 @@ class KeyboardManager:
         )
 
         self.register(
+            "nav.next_unreviewed",
+            "Next Unreviewed",
+            self.window.jump_to_next_unreviewed,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "nav.next_favorite",
+            "Next Favorite",
+            self.window.jump_to_next_favorite,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "nav.next_restore",
+            "Next Restore",
+            self.window.jump_to_next_restore,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "nav.next_back",
+            "Next Back",
+            self.window.jump_to_next_back,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "nav.next_delete",
+            "Next Delete",
+            self.window.jump_to_next_delete,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.previous",
             "Previous Image",
             self.window.previous_image,

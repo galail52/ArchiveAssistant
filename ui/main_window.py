@@ -304,6 +304,26 @@ class MainWindow(QMainWindow):
         if self.session.jump_to_first_unreviewed():
             self.refresh_ui()
 
+    def jump_to_next_unreviewed(self):
+        if self.session.jump_to_next_unreviewed():
+            self.refresh_ui()
+
+    def jump_to_next_favorite(self):
+        if self.session.jump_to_next_favorite():
+            self.refresh_ui()
+
+    def jump_to_next_restore(self):
+        if self.session.jump_to_next_restore():
+            self.refresh_ui()
+
+    def jump_to_next_back(self):
+        if self.session.jump_to_next_back():
+            self.refresh_ui()
+
+    def jump_to_next_delete(self):
+        if self.session.jump_to_next_delete():
+            self.refresh_ui()
+
     def show_database_stats(self):
         stats = self.session.stats
         total = stats["total"]
