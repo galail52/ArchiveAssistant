@@ -4,20 +4,27 @@ from core.database import ArchiveDatabase
 from core.image_manager import ImageManager
 from core.navigator import Navigator
 from core.review_state import ReviewState
+from core.view_state import ViewState
 
 
 class ReviewSession:
     def __init__(self):
         self.images = ImageManager()
         self.navigator = Navigator(self.images)
-        self.state = ReviewState()
+        self.review_state = ReviewState()
+        self.view_state = ViewState()
 
         self.database = ArchiveDatabase(
             Path("data") / "archive.db"
         )
 
+    @property
+    def state(self):
+        return self.review_state
+
     def open_project(self, folder: str | Path):
         self.images.open_project(folder)
+        self.view_state.reset()
 
         for file_path in self.images.files:
             self.database.ensure_photo(
@@ -38,10 +45,12 @@ class ReviewSession:
         current = self.current_file
 
         if current is None:
-            self.state.reset()
+            self.review_state.reset()
+            self.view_state.reset()
             return
 
-        self.state = self.database.load_state(current)
+        self.review_state = self.database.load_state(current)
+        self.view_state.set_rotation(self.review_state.rotation)
         self.database.mark_last_viewed(current)
 
     def save_current_state(self):
@@ -50,7 +59,7 @@ class ReviewSession:
         if current is None:
             return
 
-        self.database.save_state(current, self.state)
+        self.database.save_state(current, self.review_state)
         self.database.mark_last_viewed(current)
 
     def move(self, offset: int):
@@ -83,33 +92,44 @@ class ReviewSession:
     def previous_image(self):
         self.move(-1)
 
+    def set_zoom_fit(self):
+        self.view_state.set_fit()
+
+    def set_zoom_percent(self, percent: int):
+        self.view_state.set_zoom_percent(percent)
+
+    def pan_view(self, dx: int, dy: int):
+        self.view_state.pan(dx, dy)
+
     def rotate_left(self):
-        self.state.rotate_left()
+        self.review_state.rotate_left()
+        self.view_state.set_rotation(self.review_state.rotation)
         self.save_current_state()
 
     def rotate_right(self):
-        self.state.rotate_right()
+        self.review_state.rotate_right()
+        self.view_state.set_rotation(self.review_state.rotation)
         self.save_current_state()
 
     def toggle_back(self):
-        self.state.toggle_back()
+        self.review_state.toggle_back()
         self.save_current_state()
 
     def toggle_favorite(self):
-        self.state.toggle_favorite()
+        self.review_state.toggle_favorite()
         self.save_current_state()
 
     def toggle_restore(self):
-        self.state.toggle_restore()
+        self.review_state.toggle_restore()
         self.save_current_state()
 
     def toggle_delete(self):
-        self.state.toggle_delete()
+        self.review_state.toggle_delete()
         self.save_current_state()
 
     def state_for_file(self, file_path: Path) -> ReviewState:
         if file_path == self.current_file:
-            return self.state
+            return self.review_state
 
         return self.database.load_state(file_path)
 
