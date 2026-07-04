@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 from core.command_registry import CommandRegistry
 from core.review_session import ReviewSession
 from ui.dialogs.command_palette import CommandPalette
+from ui.dialogs.find_filename_dialog import FindFilenameDialog
 from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
@@ -279,6 +280,21 @@ class MainWindow(QMainWindow):
             return
 
         self.session.jump_to(target - 1)
+        self.refresh_ui()
+
+    def open_find_filename(self):
+        if not self.has_images():
+            return
+
+        index = FindFilenameDialog.get_index(
+            self.session.images.files,
+            self,
+        )
+
+        if index is None:
+            return
+
+        self.session.jump_to(index)
         self.refresh_ui()
 
     def zoom_fit(self):

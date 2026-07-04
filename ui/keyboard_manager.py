@@ -24,6 +24,7 @@ class KeyboardManager:
             self.window.open_command_palette,
             "G",
             "Application",
+            show_in_palette=False,
             help_key="G",
             help_name="Command Palette",
         )
@@ -39,12 +40,23 @@ class KeyboardManager:
         )
 
         self.register(
+            "nav.find_filename",
+            "Find Filename",
+            self.window.open_find_filename,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.previous",
             "Previous Image",
             self.window.previous_image,
             "Left",
             "Navigation",
             enabled=self.window.has_previous_image,
+            show_in_palette=False,
             help_key="← / →",
             help_name="Prev / Next",
         )
@@ -56,6 +68,7 @@ class KeyboardManager:
             "Navigation",
             enabled=self.window.has_next_image,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "nav.next.space",
@@ -64,6 +77,7 @@ class KeyboardManager:
             "Space",
             "Navigation",
             enabled=self.window.has_next_image,
+            show_in_palette=False,
             help_name="Next",
         )
         self.register(
@@ -73,6 +87,7 @@ class KeyboardManager:
             "PageUp",
             "Navigation",
             enabled=self.window.can_jump_back,
+            show_in_palette=False,
             help_key="PgUp/Dn",
             help_name="Jump 10",
         )
@@ -84,6 +99,7 @@ class KeyboardManager:
             "Navigation",
             enabled=self.window.can_jump_forward,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "nav.back50",
@@ -92,6 +108,7 @@ class KeyboardManager:
             "Ctrl+Left",
             "Navigation",
             enabled=self.window.can_jump_back,
+            show_in_palette=False,
             help_key="Ctrl+←/→",
             help_name="Jump 50",
         )
@@ -103,6 +120,7 @@ class KeyboardManager:
             "Navigation",
             enabled=self.window.can_jump_forward,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "nav.first",
@@ -111,6 +129,7 @@ class KeyboardManager:
             "Home",
             "Navigation",
             enabled=self.window.has_previous_image,
+            show_in_palette=False,
             help_key="Home/End",
             help_name="First / Last",
         )
@@ -122,6 +141,7 @@ class KeyboardManager:
             "Navigation",
             enabled=self.window.has_next_image,
             show_in_help=False,
+            show_in_palette=False,
         )
 
         self.register(
@@ -131,6 +151,7 @@ class KeyboardManager:
             "1",
             "View",
             enabled=self.window.has_images,
+            show_in_palette=False,
         )
         self.register(
             "view.zoom100",
@@ -139,6 +160,7 @@ class KeyboardManager:
             "2",
             "View",
             enabled=self.window.has_images,
+            show_in_palette=False,
             help_key="2 / 3 / 4",
             help_name="100 / 200 / 400",
         )
@@ -150,6 +172,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "view.zoom400",
@@ -159,6 +182,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "view.zoom_in",
@@ -167,6 +191,7 @@ class KeyboardManager:
             "+",
             "View",
             enabled=self.window.has_images,
+            show_in_palette=False,
             help_key="+ / -",
             help_name="Zoom In / Out",
         )
@@ -178,6 +203,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "view.zoom_out",
@@ -187,6 +213,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "view.pan_left",
@@ -195,6 +222,7 @@ class KeyboardManager:
             "Shift+Left",
             "View",
             enabled=self.window.has_images,
+            show_in_palette=False,
             help_key="Shift+Arr",
             help_name="Pan",
         )
@@ -206,6 +234,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "view.pan_up",
@@ -215,6 +244,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "view.pan_down",
@@ -224,6 +254,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
         self.register(
             "view.rotate_left",
@@ -232,6 +263,7 @@ class KeyboardManager:
             "A",
             "View",
             enabled=self.window.has_images,
+            show_in_palette=False,
             help_key="A / D",
             help_name="Rotate",
         )
@@ -243,6 +275,7 @@ class KeyboardManager:
             "View",
             enabled=self.window.has_images,
             show_in_help=False,
+            show_in_palette=False,
         )
 
         self.register(
@@ -252,6 +285,7 @@ class KeyboardManager:
             "B",
             "Review",
             enabled=self.window.has_images,
+            show_in_palette=False,
         )
         self.register(
             "review.favorite",
@@ -260,6 +294,7 @@ class KeyboardManager:
             "F",
             "Review",
             enabled=self.window.has_images,
+            show_in_palette=False,
         )
         self.register(
             "review.restore",
@@ -268,6 +303,7 @@ class KeyboardManager:
             "R",
             "Review",
             enabled=self.window.has_images,
+            show_in_palette=False,
         )
         self.register(
             "review.delete",
@@ -276,6 +312,7 @@ class KeyboardManager:
             "X",
             "Review",
             enabled=self.window.has_images,
+            show_in_palette=False,
         )
 
         self.register(
@@ -284,6 +321,7 @@ class KeyboardManager:
             self.window.close,
             "Esc",
             "Application",
+            show_in_palette=False,
         )
 
         self.update_enabled_states()
