@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.command_registry import CommandRegistry
 from core.review_session import ReviewSession
 from ui.dialogs.command_palette import CommandPalette
 from ui.header_panel import HeaderPanel
@@ -36,7 +37,11 @@ class MainWindow(QMainWindow):
         )
 
         self.session = ReviewSession()
-        self.keyboard_manager = KeyboardManager(self)
+        self.command_registry = CommandRegistry()
+        self.keyboard_manager = KeyboardManager(
+            self,
+            self.command_registry,
+        )
 
         self.header_panel = HeaderPanel()
         self.image_panel = ImagePanel(self.session)
@@ -87,14 +92,13 @@ class MainWindow(QMainWindow):
         menu = self.menuBar().addMenu("&File")
 
         open_action = menu.addAction("Open Project")
-        open_action.setShortcut(QKeySequence("Ctrl+O"))
         open_action.triggered.connect(self.open_project)
 
         menu.addSeparator()
 
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
-
+        
     def connect_controls(self):
         self.previous_button.clicked.connect(self.previous_image)
         self.next_button.clicked.connect(self.next_image)
