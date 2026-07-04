@@ -46,4 +46,73 @@ class ProjectController:
             self.session.state_for_file,
         )
 
+        self.warn_if_project_unhealthy()
+
         self.window.refresh_ui()
+
+    def warn_if_project_unhealthy(self):
+        health = self.session.check_project_health()
+
+        if health is None or health["healthy"]:
+            return
+
+        QMessageBox.warning(
+            self.window,
+            "Project Health Warning",
+            (
+                "The project does not match the database.\n\n"
+                f"Files on disk: {health['disk_count']}\n"
+                f"Database entries: {health['database_count']}\n\n"
+                f"Missing files: {health['missing_count']}\n"
+                f"New files: {health['new_count']}\n\n"
+                "Open Project Health Check for more details."
+            ),
+        )
+
+    def show_database_stats(self):
+        stats = self.session.stats
+        total = stats["total"]
+
+        reviewed_percent = (
+            round((stats["reviewed"] / total) * 100, 1)
+            if total
+            else 0
+        )
+
+        QMessageBox.information(
+            self.window,
+            "Database Stats",
+            (
+                f"Project: {self.session.project_name}\n\n"
+                f"Total photos: {stats['total']}\n"
+                f"Reviewed: {stats['reviewed']} ({reviewed_percent}%)\n\n"
+                f"Backs: {stats['backs']}\n"
+                f"Favorites: {stats['favorites']}\n"
+                f"Restore: {stats['restore']}\n"
+                f"Deletes: {stats['deletes']}"
+            ),
+        )
+
+    def show_project_health(self):
+        health = self.session.check_project_health()
+
+        if health is None:
+            return
+
+        status = (
+            "✓ Project Healthy"
+            if health["healthy"]
+            else "⚠ Needs Attention"
+        )
+
+        QMessageBox.information(
+            self.window,
+            "Project Health Check",
+            (
+                f"{status}\n\n"
+                f"Files on disk: {health['disk_count']}\n"
+                f"Database entries: {health['database_count']}\n\n"
+                f"Missing files: {health['missing_count']}\n"
+                f"New files: {health['new_count']}"
+            ),
+        )
