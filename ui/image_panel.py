@@ -6,16 +6,11 @@ from PySide6.QtWidgets import QSizePolicy, QWidget
 
 
 class ImagePanel(QWidget):
-    PAN_STEP = 80
-
-    def __init__(self):
+    def __init__(self, session):
         super().__init__()
 
+        self.session = session
         self.current_pixmap: QPixmap | None = None
-        self.rotation: int = 0
-        self.zoom_scale: float | None = None
-        self.pan_x = 0
-        self.pan_y = 0
 
         self.setSizePolicy(
             QSizePolicy.Expanding,
@@ -28,62 +23,22 @@ class ImagePanel(QWidget):
     def minimumSizeHint(self):
         return QSize(300, 220)
 
-    def load_image(self, filename: Path, rotation: int = 0):
+    def load_image(self, filename: Path):
         self.current_pixmap = QPixmap(str(filename))
-        self.rotation = rotation
-        self.reset_pan()
         self.update()
-
-    def set_rotation(self, rotation: int):
-        self.rotation = rotation
-        self.reset_pan()
-        self.update()
-
-    def set_zoom_fit(self):
-        self.zoom_scale = None
-        self.reset_pan()
-        self.update()
-
-    def set_zoom_scale(self, scale: float):
-        self.zoom_scale = scale
-        self.reset_pan()
-        self.update()
-
-    def pan_left(self):
-        self.pan(-self.PAN_STEP, 0)
-
-    def pan_right(self):
-        self.pan(self.PAN_STEP, 0)
-
-    def pan_up(self):
-        self.pan(0, -self.PAN_STEP)
-
-    def pan_down(self):
-        self.pan(0, self.PAN_STEP)
-
-    def pan(self, dx: int, dy: int):
-        if self.zoom_scale is None:
-            return
-
-        self.pan_x += dx
-        self.pan_y += dy
-        self.clamp_pan()
-        self.update()
-
-    def reset_pan(self):
-        self.pan_x = 0
-        self.pan_y = 0
 
     def transformed_pixmap(self):
         if self.current_pixmap is None:
             return None
 
+        view = self.session.view_state
+
         pixmap = self.current_pixmap.transformed(
-            QTransform().rotate(self.rotation),
+            QTransform().rotate(view.rotation),
             Qt.SmoothTransformation,
         )
 
-        if self.zoom_scale is None:
+        if view.is_fit:
             return pixmap.scaled(
                 self.size() * 0.96,
                 Qt.KeepAspectRatio,
@@ -91,24 +46,27 @@ class ImagePanel(QWidget):
             )
 
         return pixmap.scaled(
-            int(pixmap.width() * self.zoom_scale),
-            int(pixmap.height() * self.zoom_scale),
+            int(pixmap.width() * view.zoom_scale),
+            int(pixmap.height() * view.zoom_scale),
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation,
         )
 
     def clamp_pan(self):
         pixmap = self.transformed_pixmap()
+        view = self.session.view_state
 
         if pixmap is None:
-            self.reset_pan()
+            view.reset_pan()
             return
 
         max_x = max(0, (pixmap.width() - self.width()) // 2)
         max_y = max(0, (pixmap.height() - self.height()) // 2)
 
-        self.pan_x = max(-max_x, min(self.pan_x, max_x))
-        self.pan_y = max(-max_y, min(self.pan_y, max_y))
+        view.set_pan(
+            max(-max_x, min(view.pan_x, max_x)),
+            max(-max_y, min(view.pan_y, max_y)),
+        )
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -121,8 +79,10 @@ class ImagePanel(QWidget):
 
         self.clamp_pan()
 
-        x = (self.width() - pixmap.width()) // 2 - self.pan_x
-        y = (self.height() - pixmap.height()) // 2 - self.pan_y
+        view = self.session.view_state
+
+        x = (self.width() - pixmap.width()) // 2 - view.pan_x
+        y = (self.height() - pixmap.height()) // 2 - view.pan_y
 
         painter.drawPixmap(x, y, pixmap)
 

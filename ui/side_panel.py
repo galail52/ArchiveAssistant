@@ -2,6 +2,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
+    QGridLayout,
     QVBoxLayout,
     QWidget,
 )
@@ -13,6 +14,8 @@ class SidePanel(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.zoom = StatusCard("🔎 Zoom")
+        self.pan = StatusCard("↔ Pan")
         self.rotation = StatusCard("↻ Orientation")
         self.back = StatusCard("📄 Back")
         self.favorite = StatusCard("⭐ Favorite")
@@ -23,11 +26,11 @@ class SidePanel(QWidget):
         self.update_status()
 
     def build_ui(self):
-        self.setFixedWidth(330)
+        self.setFixedWidth(390)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(7)
+        layout.setContentsMargins(12, 6, 12, 6)
+        layout.setSpacing(6)
 
         title = QLabel("Review")
         title.setAlignment(Qt.AlignCenter)
@@ -35,35 +38,39 @@ class SidePanel(QWidget):
             font-size:18pt;
             font-weight:bold;
         """)
-
         layout.addWidget(title)
 
-        for card in self.status_cards:
-            card.setMinimumHeight(56)
-            card.setMaximumHeight(62)
-            layout.addWidget(card)
+        grid = QGridLayout()
+        grid.setSpacing(7)
+
+        for index, card in enumerate(self.status_cards):
+            card.setMinimumHeight(52)
+            card.setMaximumHeight(58)
+            grid.addWidget(card, index // 2, index % 2)
+
+        layout.addLayout(grid)
 
         keyboard_title = QLabel("Keyboard")
         keyboard_title.setAlignment(Qt.AlignCenter)
         keyboard_title.setStyleSheet("""
-            font-size:14pt;
+            font-size:13pt;
             font-weight:bold;
-            margin-top:8px;
+            margin-top:5px;
         """)
-
         layout.addWidget(keyboard_title)
 
         keyboard = QLabel(
-            "← / →       Previous / Next\n"
-            "Space       Next Image\n"
+            "← / →       Prev / Next\n"
+            "Space       Next\n"
             "PgUp/Dn     Jump 10\n"
             "Ctrl+←/→    Jump 50\n"
             "Home/End    First / Last\n"
-            "G           Go To Image\n"
-            "1/2/3/4     Fit / Zoom\n"
-            "Shift+Arrows Pan Zoomed Image\n"
+            "G           Go To\n"
+            "1           Fit\n"
+            "2 / 3 / 4   100 / 200 / 400\n"
+            "Shift+Arr   Pan\n"
             "A / D       Rotate\n"
-            "B           Toggle Back\n"
+            "B           Back\n"
             "F           Favorite\n"
             "R           Restore\n"
             "X           Delete\n"
@@ -79,17 +86,18 @@ class SidePanel(QWidget):
             font-family:Consolas, monospace;
             font-size:10pt;
             line-height:105%;
-            color:#bdbdbd;
+            color:#d0d0d0;
         """)
 
         layout.addWidget(keyboard)
         layout.addStretch()
-
         self.setLayout(layout)
 
     @property
     def status_cards(self):
         return [
+            self.zoom,
+            self.pan,
             self.rotation,
             self.back,
             self.favorite,
@@ -112,33 +120,28 @@ class SidePanel(QWidget):
         favorite=False,
         restore=False,
         delete=False,
+        view_state=None,
     ):
+        if view_state is None:
+            zoom_label = "Fit"
+            pan_label = "0, 0"
+            is_zoomed = False
+            is_panned = False
+        else:
+            zoom_label = view_state.zoom_label()
+            pan_label = view_state.pan_label()
+            is_zoomed = not view_state.is_fit
+            is_panned = view_state.pan_x != 0 or view_state.pan_y != 0
+            rotation = view_state.rotation
+
+        self.zoom.set_value(zoom_label, is_zoomed, "#7fc8ff")
+        self.pan.set_value(pan_label, is_panned, "#7fc8ff")
         self.rotation.set_value(
             self.rotation_label(rotation),
             rotation != 0,
             "#7fc8ff",
         )
-
-        self.back.set_value(
-            "YES" if back else "NO",
-            back,
-            "#55ff55",
-        )
-
-        self.favorite.set_value(
-            "YES" if favorite else "NO",
-            favorite,
-            "#ffd54a",
-        )
-
-        self.restore.set_value(
-            "YES" if restore else "NO",
-            restore,
-            "#ffb347",
-        )
-
-        self.delete.set_value(
-            "YES" if delete else "NO",
-            delete,
-            "#ff6666",
-        )
+        self.back.set_value("YES" if back else "NO", back, "#55ff55")
+        self.favorite.set_value("YES" if favorite else "NO", favorite, "#ffd54a")
+        self.restore.set_value("YES" if restore else "NO", restore, "#ffb347")
+        self.delete.set_value("YES" if delete else "NO", delete, "#ff6666")

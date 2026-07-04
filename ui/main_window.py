@@ -1,3 +1,4 @@
+from PySide6.QtCore import QSettings
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -19,6 +20,8 @@ from ui.widgets.thumbnail_strip import ThumbnailStrip
 
 
 class MainWindow(QMainWindow):
+    PAN_STEP = 80
+
     def __init__(self):
         super().__init__()
 
@@ -26,10 +29,15 @@ class MainWindow(QMainWindow):
         self.resize(1400, 900)
         self.setMinimumSize(900, 650)
 
+        self.settings = QSettings(
+            "ArchiveAssistant",
+            "ArchiveAssistant",
+        )
+
         self.session = ReviewSession()
 
         self.header_panel = HeaderPanel()
-        self.image_panel = ImagePanel()
+        self.image_panel = ImagePanel(self.session)
         self.side_panel = SidePanel()
         self.thumbnail_strip = ThumbnailStrip()
 
@@ -122,15 +130,27 @@ class MainWindow(QMainWindow):
         self.next_button.clicked.connect(self.next_image)
         self.thumbnail_strip.image_selected.connect(self.jump_to_image)
 
+    def last_project_folder(self):
+        return self.settings.value(
+            "last_project_folder",
+            "",
+            type=str,
+        )
+
+    def remember_project_folder(self, folder):
+        self.settings.setValue("last_project_folder", folder)
+
     def open_project(self):
         folder = QFileDialog.getExistingDirectory(
             self,
             "Select Cropped Folder",
+            self.last_project_folder(),
         )
 
         if not folder:
             return
 
+        self.remember_project_folder(folder)
         self.session.open_project(folder)
 
         if self.session.image_count == 0:
@@ -152,10 +172,7 @@ class MainWindow(QMainWindow):
         current = self.session.current_file
 
         if current is not None:
-            self.image_panel.load_image(
-                current,
-                self.session.state.rotation,
-            )
+            self.image_panel.load_image(current)
 
         current_num, total = self.session.progress
 
@@ -173,7 +190,8 @@ class MainWindow(QMainWindow):
 
     def refresh_status(self):
         self.side_panel.update_status(
-            **self.session.state.as_dict()
+            **self.session.state.as_dict(),
+            view_state=self.session.view_state,
         )
 
     def update_buttons(self):
@@ -195,6 +213,7 @@ class MainWindow(QMainWindow):
         self.thumbnail_strip.set_current(self.session.images.index)
         self.refresh_status()
         self.update_buttons()
+        self.image_panel.update()
 
     def move_images(self, offset):
         self.session.move(offset)
@@ -249,37 +268,49 @@ class MainWindow(QMainWindow):
         self.refresh_ui()
 
     def zoom_fit(self):
-        self.image_panel.set_zoom_fit()
+        self.session.set_zoom_fit()
+        self.image_panel.update()
+        self.refresh_status()
 
     def zoom_100(self):
-        self.image_panel.set_zoom_scale(1.0)
+        self.session.set_zoom_percent(100)
+        self.image_panel.update()
+        self.refresh_status()
 
     def zoom_200(self):
-        self.image_panel.set_zoom_scale(2.0)
+        self.session.set_zoom_percent(200)
+        self.image_panel.update()
+        self.refresh_status()
 
     def zoom_400(self):
-        self.image_panel.set_zoom_scale(4.0)
+        self.session.set_zoom_percent(400)
+        self.image_panel.update()
+        self.refresh_status()
 
     def pan_left(self):
-        self.image_panel.pan_left()
+        self.pan_view(-self.PAN_STEP, 0)
 
     def pan_right(self):
-        self.image_panel.pan_right()
+        self.pan_view(self.PAN_STEP, 0)
 
     def pan_up(self):
-        self.image_panel.pan_up()
+        self.pan_view(0, -self.PAN_STEP)
 
     def pan_down(self):
-        self.image_panel.pan_down()
+        self.pan_view(0, self.PAN_STEP)
+
+    def pan_view(self, dx, dy):
+        self.session.pan_view(dx, dy)
+        self.image_panel.clamp_pan()
+        self.image_panel.update()
+        self.refresh_status()
 
     def rotate_left(self):
         self.session.rotate_left()
-        self.image_panel.set_rotation(self.session.state.rotation)
         self.refresh_after_action()
 
     def rotate_right(self):
         self.session.rotate_right()
-        self.image_panel.set_rotation(self.session.state.rotation)
         self.refresh_after_action()
 
     def toggle_back(self):
