@@ -1,6 +1,5 @@
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
-    QFileDialog,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
@@ -18,6 +17,7 @@ from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
 from ui.keyboard_manager import KeyboardManager
+from ui.project_controller import ProjectController
 from ui.side_panel import SidePanel
 from ui.widgets.thumbnail_strip import ThumbnailStrip
 
@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
 
         self.session = ReviewSession()
         self.command_registry = CommandRegistry()
+        self.project_controller = ProjectController(self)
         self.keyboard_manager = KeyboardManager(
             self,
             self.command_registry,
@@ -105,6 +106,9 @@ class MainWindow(QMainWindow):
         self.next_button.clicked.connect(self.next_image)
         self.thumbnail_strip.image_selected.connect(self.jump_to_image)
 
+    def open_project(self):
+        self.project_controller.open_project()
+
     def has_images(self):
         return self.session.image_count > 0
 
@@ -126,45 +130,6 @@ class MainWindow(QMainWindow):
     def can_jump_forward(self):
         current_num, total = self.session.progress
         return current_num < total
-
-    def last_project_folder(self):
-        return self.settings.value(
-            "last_project_folder",
-            "",
-            type=str,
-        )
-
-    def remember_project_folder(self, folder):
-        self.settings.setValue("last_project_folder", folder)
-
-    def open_project(self):
-        folder = QFileDialog.getExistingDirectory(
-            self,
-            "Select Cropped Folder",
-            self.last_project_folder(),
-        )
-
-        if not folder:
-            return
-
-        self.remember_project_folder(folder)
-        self.session.open_project(folder)
-
-        if self.session.image_count == 0:
-            QMessageBox.information(
-                self,
-                "No Images",
-                "No supported image files found.",
-            )
-            self.refresh_ui()
-            return
-
-        self.thumbnail_strip.load_project(
-            self.session.images.files,
-            self.session.state_for_file,
-        )
-
-        self.refresh_ui()
 
     def refresh_ui(self):
         current = self.session.current_file
@@ -348,6 +313,26 @@ class MainWindow(QMainWindow):
                 f"Favorites: {stats['favorites']}\n"
                 f"Restore: {stats['restore']}\n"
                 f"Deletes: {stats['deletes']}"
+            ),
+        )
+
+    def show_project_health(self):
+        health = self.session.check_project_health()
+
+        if health is None:
+            return
+
+        status = "Project Healthy" if health["healthy"] else "Needs Attention"
+
+        QMessageBox.information(
+            self,
+            "Project Health Check",
+            (
+                f"Status: {status}\n\n"
+                f"Files on disk: {health['disk_count']}\n"
+                f"Database entries: {health['database_count']}\n\n"
+                f"Missing files: {health['missing_count']}\n"
+                f"New files: {health['new_count']}"
             ),
         )
 

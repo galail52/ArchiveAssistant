@@ -44,6 +44,15 @@ class ReviewSession:
 
         self.load_current_state()
 
+    def check_project_health(self):
+        if self.images.project_path is None:
+            return None
+
+        return self.database.check_project_health(
+            self.images.project_path,
+            self.images.files,
+        )
+
     def load_current_state(self):
         current = self.current_file
 

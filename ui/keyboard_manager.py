@@ -52,6 +52,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "project.health_check",
+            "Project Health Check",
+            self.window.show_project_health,
+            None,
+            "Project",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.goto_image",
             "Go To Image",
             self.window.open_go_to_image,

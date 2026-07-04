@@ -226,6 +226,43 @@ class ArchiveDatabase:
 
         return Path(row["file_path"])
 
+    def get_project_files(self, project_path: Path):
+        rows = self.connection.execute(
+            """
+            SELECT file_path
+            FROM photos
+            WHERE project_path = ?
+            ORDER BY file_path
+            """,
+            (str(project_path),),
+        ).fetchall()
+
+        return [Path(row["file_path"]) for row in rows]
+
+    def check_project_health(
+        self,
+        project_path: Path,
+        disk_files: list[Path],
+    ):
+        disk_set = {Path(file_path) for file_path in disk_files}
+        db_set = set(self.get_project_files(project_path))
+
+        missing_files = sorted(db_set - disk_set)
+        new_files = sorted(disk_set - db_set)
+
+        return {
+            "disk_count": len(disk_set),
+            "database_count": len(db_set),
+            "missing_count": len(missing_files),
+            "new_count": len(new_files),
+            "missing_files": missing_files,
+            "new_files": new_files,
+            "healthy": (
+                len(missing_files) == 0
+                and len(new_files) == 0
+            ),
+        }
+
     def get_stats(self, project_path: Path):
         row = self.connection.execute(
             """
