@@ -3,6 +3,7 @@ from pathlib import Path
 from core.database import ArchiveDatabase
 from core.image_manager import ImageManager
 from core.navigator import Navigator
+from core.review_snapshot import ReviewSnapshot
 from core.review_state import ReviewState
 from core.view_state import ViewState
 
@@ -13,6 +14,7 @@ class ReviewSession:
         self.navigator = Navigator(self.images)
         self.review_state = ReviewState()
         self.view_state = ViewState()
+        self.last_snapshot = None
 
         self.database = ArchiveDatabase(
             Path("data") / "archive.db"
@@ -25,6 +27,7 @@ class ReviewSession:
     def open_project(self, folder: str | Path):
         self.images.open_project(folder)
         self.view_state.reset()
+        self.last_snapshot = None
 
         for file_path in self.images.files:
             self.database.ensure_photo(
@@ -47,11 +50,40 @@ class ReviewSession:
         if current is None:
             self.review_state.reset()
             self.view_state.reset()
+            self.last_snapshot = None
             return
 
         self.review_state = self.database.load_state(current)
         self.view_state.set_rotation(self.review_state.rotation)
         self.database.mark_last_viewed(current)
+
+    def take_snapshot(self):
+        current = self.current_file
+
+        if current is None:
+            return
+
+        self.last_snapshot = ReviewSnapshot.capture(
+            current,
+            self.review_state,
+        )
+
+    def can_undo(self):
+        return (
+            self.last_snapshot is not None
+            and self.current_file is not None
+            and str(self.current_file) == self.last_snapshot.file_path
+        )
+
+    def undo_last_review_change(self):
+        if not self.can_undo():
+            return False
+
+        self.review_state = self.last_snapshot.state
+        self.view_state.set_rotation(self.review_state.rotation)
+        self.last_snapshot = None
+        self.save_current_state()
+        return True
 
     def save_current_state(self):
         current = self.current_file
@@ -101,6 +133,7 @@ class ReviewSession:
 
         if self.current_file != previous_file:
             self.database.mark_reviewed(previous_file)
+            self.last_snapshot = None
             self.load_current_state()
 
     def next_image(self):
@@ -125,28 +158,34 @@ class ReviewSession:
         self.view_state.pan(dx, dy)
 
     def rotate_left(self):
+        self.take_snapshot()
         self.review_state.rotate_left()
         self.view_state.set_rotation(self.review_state.rotation)
         self.save_current_state()
 
     def rotate_right(self):
+        self.take_snapshot()
         self.review_state.rotate_right()
         self.view_state.set_rotation(self.review_state.rotation)
         self.save_current_state()
 
     def toggle_back(self):
+        self.take_snapshot()
         self.review_state.toggle_back()
         self.save_current_state()
 
     def toggle_favorite(self):
+        self.take_snapshot()
         self.review_state.toggle_favorite()
         self.save_current_state()
 
     def toggle_restore(self):
+        self.take_snapshot()
         self.review_state.toggle_restore()
         self.save_current_state()
 
     def toggle_delete(self):
+        self.take_snapshot()
         self.review_state.toggle_delete()
         self.save_current_state()
 

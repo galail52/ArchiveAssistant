@@ -30,6 +30,18 @@ class KeyboardManager:
         )
 
         self.register(
+            "review.undo",
+            "Undo Review Change",
+            self.window.undo_review_change,
+            "Ctrl+Z",
+            "Review",
+            enabled=self.window.can_undo_review_change,
+            show_in_palette=False,
+            help_key="Ctrl+Z",
+            help_name="Undo",
+        )
+
+        self.register(
             "project.database_stats",
             "Database Stats",
             self.window.show_database_stats,

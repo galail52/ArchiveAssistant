@@ -108,6 +108,9 @@ class MainWindow(QMainWindow):
     def has_images(self):
         return self.session.image_count > 0
 
+    def can_undo_review_change(self):
+        return self.session.can_undo()
+
     def has_previous_image(self):
         current_num, _total = self.session.progress
         return current_num > 1
@@ -327,6 +330,10 @@ class MainWindow(QMainWindow):
                 f"Deletes: {stats['deletes']}"
             ),
         )
+
+    def undo_review_change(self):
+        if self.session.undo_last_review_change():
+            self.refresh_after_action()
 
     def zoom_fit(self):
         self.session.set_zoom_fit()

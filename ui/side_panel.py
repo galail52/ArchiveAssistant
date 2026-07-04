@@ -69,8 +69,8 @@ class SidePanel(QWidget):
         )
         keyboard.setStyleSheet("""
             font-family:Consolas, monospace;
-            font-size:10pt;
-            line-height:105%;
+            font-size:9.5pt;
+            line-height:100%;
             color:#d0d0d0;
         """)
 
