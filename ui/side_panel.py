@@ -60,6 +60,7 @@ class SidePanel(QWidget):
         layout.addWidget(keyboard_title)
 
         keyboard = QLabel(
+            "Ctrl+O      Open Project\n"
             "← / →       Prev / Next\n"
             "Space       Next\n"
             "PgUp/Dn     Jump 10\n"

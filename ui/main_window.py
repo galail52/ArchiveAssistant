@@ -1,5 +1,5 @@
 from PySide6.QtCore import QSettings
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -15,6 +15,7 @@ from core.review_session import ReviewSession
 from ui.dialogs.command_palette import CommandPalette
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
+from ui.keyboard_manager import KeyboardManager
 from ui.side_panel import SidePanel
 from ui.widgets.thumbnail_strip import ThumbnailStrip
 
@@ -35,6 +36,7 @@ class MainWindow(QMainWindow):
         )
 
         self.session = ReviewSession()
+        self.keyboard_manager = KeyboardManager(self)
 
         self.header_panel = HeaderPanel()
         self.image_panel = ImagePanel(self.session)
@@ -46,7 +48,7 @@ class MainWindow(QMainWindow):
 
         self.build_ui()
         self.create_menu()
-        self.create_shortcuts()
+        self.keyboard_manager.register_shortcuts()
         self.connect_controls()
         self.refresh_ui()
 
@@ -83,50 +85,13 @@ class MainWindow(QMainWindow):
         menu = self.menuBar().addMenu("&File")
 
         open_action = menu.addAction("Open Project")
+        open_action.setShortcut(QKeySequence("Ctrl+O"))
         open_action.triggered.connect(self.open_project)
 
         menu.addSeparator()
 
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
-
-    def create_shortcuts(self):
-        bindings = {
-            "Left": self.previous_image,
-            "Right": self.next_image,
-            "Space": self.next_image,
-            "Home": self.first_image,
-            "End": self.last_image,
-            "PageUp": self.jump_back,
-            "PageDown": self.jump_forward,
-            "Ctrl+Left": self.jump_back_far,
-            "Ctrl+Right": self.jump_forward_far,
-            "Shift+Left": self.pan_left,
-            "Shift+Right": self.pan_right,
-            "Shift+Up": self.pan_up,
-            "Shift+Down": self.pan_down,
-            "G": self.open_command_palette,
-            "1": self.zoom_fit,
-            "2": self.zoom_100,
-            "3": self.zoom_200,
-            "4": self.zoom_400,
-            "+": self.zoom_in,
-            "=": self.zoom_in,
-            "-": self.zoom_out,
-            "A": self.rotate_left,
-            "D": self.rotate_right,
-            "B": self.toggle_back,
-            "F": self.toggle_favorite,
-            "R": self.toggle_restore,
-            "X": self.toggle_delete,
-            "Esc": self.close,
-        }
-
-        for key, callback in bindings.items():
-            action = QAction(self)
-            action.setShortcut(QKeySequence(key))
-            action.triggered.connect(callback)
-            self.addAction(action)
 
     def connect_controls(self):
         self.previous_button.clicked.connect(self.previous_image)
@@ -333,7 +298,6 @@ class MainWindow(QMainWindow):
 
     def toggle_restore(self):
         self.session.toggle_restore()
-
         self.refresh_after_action()
 
     def toggle_delete(self):
