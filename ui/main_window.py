@@ -1,5 +1,4 @@
 from PySide6.QtCore import QSettings
-from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
@@ -98,11 +97,14 @@ class MainWindow(QMainWindow):
 
         exit_action = menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
-        
+
     def connect_controls(self):
         self.previous_button.clicked.connect(self.previous_image)
         self.next_button.clicked.connect(self.next_image)
         self.thumbnail_strip.image_selected.connect(self.jump_to_image)
+
+    def has_images(self):
+        return self.session.image_count > 0
 
     def last_project_folder(self):
         return self.settings.value(
@@ -133,6 +135,7 @@ class MainWindow(QMainWindow):
                 "No Images",
                 "No supported image files found.",
             )
+            self.refresh_ui()
             return
 
         self.thumbnail_strip.load_project(
@@ -161,6 +164,7 @@ class MainWindow(QMainWindow):
 
         self.refresh_status()
         self.update_buttons()
+        self.keyboard_manager.update_enabled_states()
 
     def refresh_status(self):
         self.side_panel.update_status(
@@ -187,12 +191,14 @@ class MainWindow(QMainWindow):
         self.thumbnail_strip.set_current(self.session.images.index)
         self.refresh_status()
         self.update_buttons()
+        self.keyboard_manager.update_enabled_states()
         self.image_panel.update()
 
     def refresh_after_view_action(self):
         self.image_panel.clamp_pan()
         self.image_panel.update()
         self.refresh_status()
+        self.keyboard_manager.update_enabled_states()
 
     def move_images(self, offset):
         self.session.move(offset)
