@@ -112,6 +112,29 @@ class ReviewSession:
         self.database.save_state(current, self.review_state)
         self.database.mark_last_viewed(current)
 
+    def save_current_metadata(self):
+        current = self.current_file
+
+        if current is None:
+            return
+
+        self.database.save_metadata(current, self.metadata_state)
+
+    def update_metadata(
+        self,
+        notes: str,
+        people: str,
+        location: str,
+        date_taken: str,
+    ):
+        self.metadata_state = MetadataState(
+            notes=notes,
+            people=people,
+            location=location,
+            date_taken=date_taken,
+        )
+        self.save_current_metadata()
+
     def move(self, offset: int):
         self.navigate(lambda: self.navigator.move(offset))
 

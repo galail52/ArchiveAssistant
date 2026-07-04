@@ -2,6 +2,7 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+from core.metadata_state import MetadataState
 from core.review_state import ReviewState
 
 
@@ -81,13 +82,32 @@ class ArchiveDatabase:
             ).fetchall()
         }
 
-        if "reviewed" not in columns:
-            self.connection.execute(
-                """
+        migrations = {
+            "reviewed": """
                 ALTER TABLE photos
                 ADD COLUMN reviewed INTEGER NOT NULL DEFAULT 0
-                """
-            )
+            """,
+            "notes": """
+                ALTER TABLE photos
+                ADD COLUMN notes TEXT DEFAULT ''
+            """,
+            "people": """
+                ALTER TABLE photos
+                ADD COLUMN people TEXT DEFAULT ''
+            """,
+            "location": """
+                ALTER TABLE photos
+                ADD COLUMN location TEXT DEFAULT ''
+            """,
+            "date_taken": """
+                ALTER TABLE photos
+                ADD COLUMN date_taken TEXT DEFAULT ''
+            """,
+        }
+
+        for column, sql in migrations.items():
+            if column not in columns:
+                self.connection.execute(sql)
 
         self.connection.commit()
 
@@ -155,6 +175,53 @@ class ArchiveDatabase:
                 int(state.favorite),
                 int(state.needs_restore),
                 int(state.delete),
+                str(file_path),
+            ),
+        )
+
+        self.connection.commit()
+
+    def load_metadata(self, file_path: Path) -> MetadataState:
+        row = self.connection.execute(
+            """
+            SELECT
+                notes,
+                people,
+                location,
+                date_taken
+            FROM photos
+            WHERE file_path = ?
+            """,
+            (str(file_path),),
+        ).fetchone()
+
+        if row is None:
+            return MetadataState()
+
+        return MetadataState(
+            notes=row["notes"] or "",
+            people=row["people"] or "",
+            location=row["location"] or "",
+            date_taken=row["date_taken"] or "",
+        )
+
+    def save_metadata(self, file_path: Path, metadata: MetadataState):
+        self.connection.execute(
+            """
+            UPDATE photos
+            SET
+                notes = ?,
+                people = ?,
+                location = ?,
+                date_taken = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE file_path = ?
+            """,
+            (
+                metadata.notes,
+                metadata.people,
+                metadata.location,
+                metadata.date_taken,
                 str(file_path),
             ),
         )
