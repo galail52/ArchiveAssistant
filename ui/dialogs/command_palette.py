@@ -1,86 +1,73 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
-    QHBoxLayout,
+    QDialogButtonBox,
     QLabel,
     QLineEdit,
-    QPushButton,
     QVBoxLayout,
 )
 
+from core.command_model import CommandModel
+
 
 class CommandPalette(QDialog):
-    def __init__(self, current_number: int, total: int, parent=None):
+    def __init__(self, registry, parent=None):
         super().__init__(parent)
 
-        self.total = total
-        self.target_number = None
-
-        self.setWindowTitle("Go To Image")
+        self.setWindowTitle("Command Palette")
         self.setModal(True)
-        self.setFixedWidth(360)
+        self.setMinimumWidth(420)
 
-        self.label = QLabel(f"Go to image number 1 - {total}:")
-        self.input = QLineEdit(str(current_number))
-        self.ok_button = QPushButton("Go")
-        self.cancel_button = QPushButton("Cancel")
-        self.error = QLabel("")
+        self.model = CommandModel(registry)
+        self.selected_command = None
 
-        self.build_ui()
-        self.connect_controls()
+        self.prompt = QLabel("Command")
+        self.edit = QLineEdit()
+        self.edit.textChanged.connect(self.update_matches)
 
-    def build_ui(self):
-        self.input.selectAll()
-        self.input.setAlignment(Qt.AlignCenter)
+        self.preview = QLabel("")
+        self.preview.setWordWrap(True)
 
-        self.error.setAlignment(Qt.AlignCenter)
-        self.error.setStyleSheet("""
-            color:#ff7777;
-            font-weight:bold;
-        """)
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        )
 
-        buttons = QHBoxLayout()
-        buttons.addWidget(self.ok_button)
-        buttons.addWidget(self.cancel_button)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout()
-        layout.setContentsMargins(14, 14, 14, 14)
-        layout.setSpacing(8)
-        layout.addWidget(self.label)
-        layout.addWidget(self.input)
-        layout.addWidget(self.error)
-        layout.addLayout(buttons)
+        layout.addWidget(self.prompt)
+        layout.addWidget(self.edit)
+        layout.addWidget(self.preview)
+        layout.addWidget(buttons)
 
         self.setLayout(layout)
 
-    def connect_controls(self):
-        self.ok_button.clicked.connect(self.accept_command)
-        self.cancel_button.clicked.connect(self.reject)
-        self.input.returnPressed.connect(self.accept_command)
+        self.update_matches()
 
-    def accept_command(self):
-        text = self.input.text().strip()
+    def update_matches(self):
+        self.model.set_query(self.edit.text())
 
-        if not text.isdigit():
-            self.error.setText("Enter a number.")
-            self.input.selectAll()
+        command = self.model.first_match()
+        self.selected_command = command
+
+        if command is None:
+            self.preview.setText("No matching commands.")
             return
 
-        number = int(text)
+        shortcut = command.shortcut or ""
 
-        if number < 1 or number > self.total:
-            self.error.setText(f"Use 1 - {self.total}.")
-            self.input.selectAll()
-            return
+        self.preview.setText(
+            f"{command.category}\n\n"
+            f"{command.name}\n"
+            f"{shortcut}"
+        )
 
-        self.target_number = number
-        self.accept()
+    @staticmethod
+    def get_command(registry, parent=None):
+        dialog = CommandPalette(registry, parent)
 
-    @classmethod
-    def get_target(cls, current_number: int, total: int, parent=None):
-        dialog = cls(current_number, total, parent)
+        if dialog.exec() != QDialog.Accepted:
+            return None
 
-        if dialog.exec() == QDialog.Accepted:
-            return dialog.target_number
-
-        return None
+        return dialog.selected_command

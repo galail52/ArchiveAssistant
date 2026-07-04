@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 from core.command_registry import CommandRegistry
 from core.review_session import ReviewSession
 from ui.dialogs.command_palette import CommandPalette
+from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
 from ui.keyboard_manager import KeyboardManager
@@ -249,12 +250,26 @@ class MainWindow(QMainWindow):
         self.refresh_ui()
 
     def open_command_palette(self):
+        command = CommandPalette.get_command(
+            self.command_registry,
+            self,
+        )
+
+        if command is None:
+            return
+
+        if not command.is_enabled():
+            return
+
+        command.callback()
+
+    def open_go_to_image(self):
         current_num, total = self.session.progress
 
         if total == 0:
             return
 
-        target = CommandPalette.get_target(
+        target = JumpToImageDialog.get_target(
             current_num,
             total,
             self,

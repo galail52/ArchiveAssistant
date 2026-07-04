@@ -19,6 +19,26 @@ class KeyboardManager:
         )
 
         self.register(
+            "app.command_palette",
+            "Command Palette",
+            self.window.open_command_palette,
+            "G",
+            "Application",
+            help_key="G",
+            help_name="Command Palette",
+        )
+
+        self.register(
+            "nav.goto_image",
+            "Go To Image",
+            self.window.open_go_to_image,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.previous",
             "Previous Image",
             self.window.previous_image,
@@ -102,15 +122,6 @@ class KeyboardManager:
             "Navigation",
             enabled=self.window.has_next_image,
             show_in_help=False,
-        )
-        self.register(
-            "nav.goto",
-            "Go To Image",
-            self.window.open_command_palette,
-            "G",
-            "Navigation",
-            enabled=self.window.has_images,
-            help_name="Go To",
         )
 
         self.register(
