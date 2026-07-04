@@ -2,6 +2,7 @@ from pathlib import Path
 
 from core.database import ArchiveDatabase
 from core.image_manager import ImageManager
+from core.metadata_state import MetadataState
 from core.navigator import Navigator
 from core.review_snapshot import ReviewSnapshot
 from core.review_state import ReviewState
@@ -14,6 +15,7 @@ class ReviewSession:
         self.navigator = Navigator(self.images)
         self.review_state = ReviewState()
         self.view_state = ViewState()
+        self.metadata_state = MetadataState()
         self.last_snapshot = None
 
         self.database = ArchiveDatabase(
@@ -24,9 +26,14 @@ class ReviewSession:
     def state(self):
         return self.review_state
 
+    @property
+    def metadata(self):
+        return self.metadata_state
+
     def open_project(self, folder: str | Path):
         self.images.open_project(folder)
         self.view_state.reset()
+        self.metadata_state.reset()
         self.last_snapshot = None
 
         for file_path in self.images.files:
@@ -59,10 +66,12 @@ class ReviewSession:
         if current is None:
             self.review_state.reset()
             self.view_state.reset()
+            self.metadata_state.reset()
             self.last_snapshot = None
             return
 
         self.review_state = self.database.load_state(current)
+        self.metadata_state = self.database.load_metadata(current)
         self.view_state.set_rotation(self.review_state.rotation)
         self.database.mark_last_viewed(current)
 
