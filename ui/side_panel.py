@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
     QGridLayout,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -22,6 +23,7 @@ class SidePanel(QWidget):
         self.back = StatusCard("📄 Back")
         self.favorite = StatusCard("⭐ Favorite")
         self.restore = StatusCard("🛠 Restore")
+        self.research = StatusCard("🔍 Research")
         self.delete = StatusCard("🗑 Delete")
 
         self.build_ui()
@@ -46,8 +48,8 @@ class SidePanel(QWidget):
         grid.setSpacing(7)
 
         for index, card in enumerate(self.status_cards):
-            card.setMinimumHeight(52)
-            card.setMaximumHeight(58)
+            card.setMinimumHeight(48)
+            card.setMaximumHeight(54)
             grid.addWidget(card, index // 2, index % 2)
 
         layout.addLayout(grid)
@@ -63,10 +65,6 @@ class SidePanel(QWidget):
 
         keyboard = QLabel(self.keyboard_help)
         keyboard.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        keyboard.setSizePolicy(
-            QSizePolicy.Expanding,
-            QSizePolicy.Fixed,
-        )
         keyboard.setStyleSheet("""
             font-family:Consolas, monospace;
             font-size:9.5pt;
@@ -74,8 +72,17 @@ class SidePanel(QWidget):
             color:#d0d0d0;
         """)
 
-        layout.addWidget(keyboard)
-        layout.addStretch()
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(keyboard)
+        scroll.setSizePolicy(
+            QSizePolicy.Expanding,
+            QSizePolicy.Expanding,
+        )
+
+        layout.addWidget(scroll, 1)
         self.setLayout(layout)
 
     @property
@@ -87,6 +94,7 @@ class SidePanel(QWidget):
             self.back,
             self.favorite,
             self.restore,
+            self.research,
             self.delete,
         ]
 
@@ -104,6 +112,7 @@ class SidePanel(QWidget):
         back=False,
         favorite=False,
         restore=False,
+        research=False,
         delete=False,
         view_state=None,
     ):
@@ -129,4 +138,5 @@ class SidePanel(QWidget):
         self.back.set_value("YES" if back else "NO", back, "#55ff55")
         self.favorite.set_value("YES" if favorite else "NO", favorite, "#ffd54a")
         self.restore.set_value("YES" if restore else "NO", restore, "#ffb347")
+        self.research.set_value("YES" if research else "NO", research, "#b388ff")
         self.delete.set_value("YES" if delete else "NO", delete, "#ff6666")
