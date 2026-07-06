@@ -42,6 +42,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "metadata.edit",
+            "Edit Metadata",
+            self.window.open_metadata_editor,
+            None,
+            "Metadata",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "project.database_stats",
             "Database Stats",
             self.window.show_database_stats,

@@ -56,12 +56,17 @@ class ArchiveDatabase:
                 has_back INTEGER NOT NULL DEFAULT 0,
                 favorite INTEGER NOT NULL DEFAULT 0,
                 needs_restore INTEGER NOT NULL DEFAULT 0,
+                needs_research INTEGER NOT NULL DEFAULT 0,
                 delete_flag INTEGER NOT NULL DEFAULT 0,
 
-                notes TEXT DEFAULT '',
                 people TEXT DEFAULT '',
+                event TEXT DEFAULT '',
                 location TEXT DEFAULT '',
                 date_taken TEXT DEFAULT '',
+                keywords TEXT DEFAULT '',
+                notes TEXT DEFAULT '',
+                note_by TEXT DEFAULT '',
+                confidence INTEGER NOT NULL DEFAULT 0,
 
                 reviewed INTEGER NOT NULL DEFAULT 0,
                 last_viewed INTEGER NOT NULL DEFAULT 0,
@@ -87,13 +92,17 @@ class ArchiveDatabase:
                 ALTER TABLE photos
                 ADD COLUMN reviewed INTEGER NOT NULL DEFAULT 0
             """,
-            "notes": """
+            "needs_research": """
                 ALTER TABLE photos
-                ADD COLUMN notes TEXT DEFAULT ''
+                ADD COLUMN needs_research INTEGER NOT NULL DEFAULT 0
             """,
             "people": """
                 ALTER TABLE photos
                 ADD COLUMN people TEXT DEFAULT ''
+            """,
+            "event": """
+                ALTER TABLE photos
+                ADD COLUMN event TEXT DEFAULT ''
             """,
             "location": """
                 ALTER TABLE photos
@@ -102,6 +111,22 @@ class ArchiveDatabase:
             "date_taken": """
                 ALTER TABLE photos
                 ADD COLUMN date_taken TEXT DEFAULT ''
+            """,
+            "keywords": """
+                ALTER TABLE photos
+                ADD COLUMN keywords TEXT DEFAULT ''
+            """,
+            "notes": """
+                ALTER TABLE photos
+                ADD COLUMN notes TEXT DEFAULT ''
+            """,
+            "note_by": """
+                ALTER TABLE photos
+                ADD COLUMN note_by TEXT DEFAULT ''
+            """,
+            "confidence": """
+                ALTER TABLE photos
+                ADD COLUMN confidence INTEGER NOT NULL DEFAULT 0
             """,
         }
 
@@ -138,6 +163,7 @@ class ArchiveDatabase:
                 has_back,
                 favorite,
                 needs_restore,
+                needs_research,
                 delete_flag
             FROM photos
             WHERE file_path = ?
@@ -153,6 +179,7 @@ class ArchiveDatabase:
             has_back=bool(row["has_back"]),
             favorite=bool(row["favorite"]),
             needs_restore=bool(row["needs_restore"]),
+            needs_research=bool(row["needs_research"]),
             delete=bool(row["delete_flag"]),
         )
 
@@ -165,6 +192,7 @@ class ArchiveDatabase:
                 has_back = ?,
                 favorite = ?,
                 needs_restore = ?,
+                needs_research = ?,
                 delete_flag = ?,
                 updated_at = CURRENT_TIMESTAMP
             WHERE file_path = ?
@@ -174,6 +202,7 @@ class ArchiveDatabase:
                 int(state.has_back),
                 int(state.favorite),
                 int(state.needs_restore),
+                int(state.needs_research),
                 int(state.delete),
                 str(file_path),
             ),
@@ -185,10 +214,14 @@ class ArchiveDatabase:
         row = self.connection.execute(
             """
             SELECT
-                notes,
                 people,
+                event,
                 location,
-                date_taken
+                date_taken,
+                keywords,
+                notes,
+                note_by,
+                confidence
             FROM photos
             WHERE file_path = ?
             """,
@@ -199,10 +232,14 @@ class ArchiveDatabase:
             return MetadataState()
 
         return MetadataState(
-            notes=row["notes"] or "",
             people=row["people"] or "",
+            event=row["event"] or "",
             location=row["location"] or "",
             date_taken=row["date_taken"] or "",
+            keywords=row["keywords"] or "",
+            notes=row["notes"] or "",
+            note_by=row["note_by"] or "",
+            confidence=row["confidence"] or 0,
         )
 
     def save_metadata(self, file_path: Path, metadata: MetadataState):
@@ -210,18 +247,26 @@ class ArchiveDatabase:
             """
             UPDATE photos
             SET
-                notes = ?,
                 people = ?,
+                event = ?,
                 location = ?,
                 date_taken = ?,
+                keywords = ?,
+                notes = ?,
+                note_by = ?,
+                confidence = ?,
                 updated_at = CURRENT_TIMESTAMP
             WHERE file_path = ?
             """,
             (
-                metadata.notes,
                 metadata.people,
+                metadata.event,
                 metadata.location,
                 metadata.date_taken,
+                metadata.keywords,
+                metadata.notes,
+                metadata.note_by,
+                metadata.confidence,
                 str(file_path),
             ),
         )
@@ -339,6 +384,7 @@ class ArchiveDatabase:
                 SUM(has_back) AS backs,
                 SUM(favorite) AS favorites,
                 SUM(needs_restore) AS restore,
+                SUM(needs_research) AS research,
                 SUM(delete_flag) AS deletes
             FROM photos
             WHERE project_path = ?
@@ -352,5 +398,6 @@ class ArchiveDatabase:
             "backs": row["backs"] or 0,
             "favorites": row["favorites"] or 0,
             "restore": row["restore"] or 0,
+            "research": row["research"] or 0,
             "deletes": row["deletes"] or 0,
         }

@@ -7,6 +7,7 @@ class ReviewState:
     has_back: bool = False
     favorite: bool = False
     needs_restore: bool = False
+    needs_research: bool = False
     delete: bool = False
 
     def reset(self):
@@ -14,6 +15,7 @@ class ReviewState:
         self.has_back = False
         self.favorite = False
         self.needs_restore = False
+        self.needs_research = False
         self.delete = False
 
     def rotate_left(self):
@@ -31,6 +33,9 @@ class ReviewState:
     def toggle_restore(self):
         self.needs_restore = not self.needs_restore
 
+    def toggle_research(self):
+        self.needs_research = not self.needs_research
+
     def toggle_delete(self):
         self.delete = not self.delete
 
@@ -40,5 +45,6 @@ class ReviewState:
             "back": self.has_back,
             "favorite": self.favorite,
             "restore": self.needs_restore,
+            "research": self.needs_research,
             "delete": self.delete,
         }

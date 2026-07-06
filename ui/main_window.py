@@ -2,7 +2,6 @@ from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
-    QMessageBox,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
@@ -14,6 +13,7 @@ from core.review_session import ReviewSession
 from ui.dialogs.command_palette import CommandPalette
 from ui.dialogs.find_filename_dialog import FindFilenameDialog
 from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
+from ui.dialogs.metadata_dialog import MetadataDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
 from ui.keyboard_manager import KeyboardManager
@@ -108,6 +108,12 @@ class MainWindow(QMainWindow):
 
     def open_project(self):
         self.project_controller.open_project()
+
+    def show_database_stats(self):
+        self.project_controller.show_database_stats()
+
+    def show_project_health(self):
+        self.project_controller.show_project_health()
 
     def has_images(self):
         return self.session.image_count > 0
@@ -265,6 +271,21 @@ class MainWindow(QMainWindow):
         self.session.jump_to(index)
         self.refresh_ui()
 
+    def open_metadata_editor(self):
+        if not self.has_images():
+            return
+
+        values = MetadataDialog.get_metadata(
+            self.session.metadata,
+            self,
+        )
+
+        if values is None:
+            return
+
+        self.session.update_metadata(**values)
+        self.refresh_ui()
+
     def jump_to_first_unreviewed(self):
         if self.session.jump_to_first_unreviewed():
             self.refresh_ui()
@@ -288,53 +309,6 @@ class MainWindow(QMainWindow):
     def jump_to_next_delete(self):
         if self.session.jump_to_next_delete():
             self.refresh_ui()
-
-    def show_database_stats(self):
-        stats = self.session.stats
-        total = stats["total"]
-
-        if total:
-            reviewed_percent = round(
-                (stats["reviewed"] / total) * 100,
-                1,
-            )
-        else:
-            reviewed_percent = 0
-
-        QMessageBox.information(
-            self,
-            "Database Stats",
-            (
-                f"Project: {self.session.project_name}\n\n"
-                f"Total photos: {stats['total']}\n"
-                f"Reviewed: {stats['reviewed']} "
-                f"({reviewed_percent}%)\n\n"
-                f"Backs: {stats['backs']}\n"
-                f"Favorites: {stats['favorites']}\n"
-                f"Restore: {stats['restore']}\n"
-                f"Deletes: {stats['deletes']}"
-            ),
-        )
-
-    def show_project_health(self):
-        health = self.session.check_project_health()
-
-        if health is None:
-            return
-
-        status = "Project Healthy" if health["healthy"] else "Needs Attention"
-
-        QMessageBox.information(
-            self,
-            "Project Health Check",
-            (
-                f"Status: {status}\n\n"
-                f"Files on disk: {health['disk_count']}\n"
-                f"Database entries: {health['database_count']}\n\n"
-                f"Missing files: {health['missing_count']}\n"
-                f"New files: {health['new_count']}"
-            ),
-        )
 
     def undo_review_change(self):
         if self.session.undo_last_review_change():
