@@ -81,6 +81,28 @@ Future fields may be added as archival needs evolve.
 
 ---
 
+# Metadata Power Tools
+
+ArchiveAssistant supports reusable metadata templates for repeated contexts such as events, locations, or family groups.
+
+Templates are stored separately from image metadata and can be managed from the Command Palette:
+
+- Save Current Metadata as Template
+- Apply Metadata Template
+- Rename Metadata Template
+- Delete Metadata Template
+
+Templates currently include People, Event, Location, Date Taken, Keywords, Notes, Note Author, and Confidence.
+
+Recent values for People, Event, Location, and Keywords are remembered per project in the database. Metadata entry uses those recent values for local, case-insensitive auto-complete.
+
+The metadata clipboard has two modes:
+
+- `C` / `P` copy and paste all metadata fields.
+- Command Palette actions can copy and paste only selected fields.
+
+---
+
 # Review Flags
 
 Review flags describe the condition of the photograph.
@@ -286,6 +308,17 @@ ArchiveAssistant should support multiple export formats.
 The export layer should remain independent from metadata entry.
 
 Adding a new exporter should never require changing the metadata model.
+
+Current export foundation:
+
+- JSON export writes a project metadata file.
+- CSV export writes a project metadata spreadsheet-friendly file.
+- XMP sidecar, EXIF, and IPTC exporters are dry-run stubs only.
+- Export preview is available from the Command Palette.
+
+Export warnings currently flag missing People, Date, Location, Delete, and Needs Research.
+
+Image-writing exports must remain human-controlled and non-destructive until explicitly implemented.
 
 ---
 

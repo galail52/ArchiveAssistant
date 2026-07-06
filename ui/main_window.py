@@ -1,7 +1,9 @@
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QInputDialog,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
@@ -9,11 +11,13 @@ from PySide6.QtWidgets import (
 )
 
 from core.command_registry import CommandRegistry
+from core.metadata_state import METADATA_FIELDS
 from core.review_session import ReviewSession
 from ui.dialogs.command_palette import CommandPalette
 from ui.dialogs.find_filename_dialog import FindFilenameDialog
 from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.dialogs.metadata_dialog import MetadataDialog
+from ui.dialogs.metadata_field_dialog import MetadataFieldDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
 from ui.keyboard_manager import KeyboardManager
@@ -147,6 +151,29 @@ class MainWindow(QMainWindow):
     def show_project_health(self):
         self.project_controller.show_project_health()
 
+    def show_export_preview(self):
+        result = self.session.export_preview()
+        self.focus_image_viewer()
+
+        if result is None:
+            return
+
+        lines = result.summary_lines()
+
+        if result.warnings:
+            lines.append("")
+            lines.append("First warnings:")
+
+            for warning in result.warnings[:8]:
+                lines.append(f"- {warning.file_path.name}: {warning.message}")
+
+        QMessageBox.information(
+            self,
+            "Export Preview",
+            "\n".join(lines),
+        )
+        self.focus_image_viewer()
+
     def has_images(self):
         return self.session.image_count > 0
 
@@ -169,6 +196,9 @@ class MainWindow(QMainWindow):
         current_num, total = self.session.progress
         return current_num < total
 
+    def can_return_to_previous_jump(self):
+        return self.session.can_return_to_previous_jump()
+
     def can_copy_metadata_from_previous(self):
         return self.session.can_copy_metadata_from_previous()
 
@@ -177,6 +207,9 @@ class MainWindow(QMainWindow):
 
     def can_paste_metadata(self):
         return self.session.can_paste_metadata()
+
+    def can_paste_selected_metadata(self):
+        return self.session.can_paste_selected_metadata()
 
     def refresh_ui(self):
         current = self.session.current_file
@@ -210,6 +243,9 @@ class MainWindow(QMainWindow):
         self.previous_button.setEnabled(self.has_previous_image())
         self.next_button.setEnabled(self.has_next_image())
 
+    def show_navigation_message(self, message):
+        self.statusBar().showMessage(message, 1800)
+
     def refresh_after_action(self):
         current_num, total = self.session.progress
 
@@ -240,7 +276,14 @@ class MainWindow(QMainWindow):
         self.focus_image_viewer()
 
     def move_images(self, offset):
-        self.session.move(offset)
+        moved = self.session.move(offset)
+
+        if not moved:
+            if offset < 0:
+                self.show_navigation_message("Already at first image")
+            elif offset > 0:
+                self.show_navigation_message("Already at last image")
+
         self.refresh_ui()
 
     def next_image(self):
@@ -250,28 +293,50 @@ class MainWindow(QMainWindow):
         self.move_images(-1)
 
     def jump_forward(self):
-        self.move_images(10)
+        self.jump_by(10)
 
     def jump_back(self):
-        self.move_images(-10)
+        self.jump_by(-10)
 
     def jump_forward_far(self):
-        self.move_images(50)
+        self.jump_by(50)
 
     def jump_back_far(self):
-        self.move_images(-50)
+        self.jump_by(-50)
+
+    def jump_by(self, offset):
+        moved = self.session.jump_by(offset)
+
+        if not moved:
+            if offset < 0:
+                self.show_navigation_message("Already at first image")
+            elif offset > 0:
+                self.show_navigation_message("Already at last image")
+
+        self.refresh_ui()
 
     def first_image(self):
-        self.session.first()
+        if not self.session.first():
+            self.show_navigation_message("Already at first image")
         self.refresh_ui()
 
     def last_image(self):
-        self.session.last()
+        if not self.session.last():
+            self.show_navigation_message("Already at last image")
         self.refresh_ui()
 
     def jump_to_image(self, index):
-        self.session.jump_to(index)
+        if not self.session.jump_to(index):
+            self.show_navigation_message("Image already selected")
         self.refresh_ui()
+
+    def return_to_previous_jump(self):
+        if self.session.return_to_previous_jump():
+            self.refresh_ui()
+            return
+
+        self.show_navigation_message("No previous jump location")
+        self.focus_image_viewer()
 
     def open_command_palette(self):
         try:
@@ -308,8 +373,7 @@ class MainWindow(QMainWindow):
         if target is None:
             return
 
-        self.session.jump_to(target - 1)
-        self.refresh_ui()
+        self.jump_to_image(target - 1)
 
     def open_find_filename(self):
         if not self.has_images():
@@ -326,8 +390,7 @@ class MainWindow(QMainWindow):
         if index is None:
             return
 
-        self.session.jump_to(index)
-        self.refresh_ui()
+        self.jump_to_image(index)
 
     def open_metadata_editor(self):
         if not self.has_images():
@@ -342,6 +405,7 @@ class MainWindow(QMainWindow):
             values = MetadataDialog.get_metadata(
                 self.session.metadata,
                 self,
+                self.session.recent_metadata_values(),
             )
         finally:
             self.metadata_dialog_open = False
@@ -364,6 +428,139 @@ class MainWindow(QMainWindow):
     def paste_metadata(self):
         if self.session.paste_metadata():
             self.refresh_after_metadata_action()
+
+    def copy_selected_metadata_fields(self):
+        fields = MetadataFieldDialog.get_fields(
+            "Copy Selected Metadata Fields",
+            METADATA_FIELDS,
+            self,
+        )
+
+        self.focus_image_viewer()
+
+        if not fields:
+            return
+
+        if self.session.copy_selected_metadata(fields):
+            self.refresh_after_metadata_action()
+
+    def paste_selected_metadata_fields(self):
+        available_fields = []
+
+        if self.session.metadata_patch_clipboard is not None:
+            available_fields = self.session.metadata_patch_clipboard.fields
+
+        fields = MetadataFieldDialog.get_fields(
+            "Paste Selected Metadata Fields",
+            available_fields,
+            self,
+        )
+
+        self.focus_image_viewer()
+
+        if not fields:
+            return
+
+        if self.session.paste_selected_metadata(fields):
+            self.refresh_after_metadata_action()
+
+    def save_metadata_template(self):
+        name, accepted = QInputDialog.getText(
+            self,
+            "Save Metadata Template",
+            "Template name:",
+        )
+        self.focus_image_viewer()
+
+        if not accepted:
+            return
+
+        template_id = self.session.save_current_metadata_template(name)
+
+        if template_id is not None:
+            self.show_navigation_message("Metadata template saved")
+
+    def select_metadata_template(self, title):
+        templates = self.session.metadata_templates()
+
+        if not templates:
+            QMessageBox.information(
+                self,
+                title,
+                "No metadata templates have been saved yet.",
+            )
+            self.focus_image_viewer()
+            return None
+
+        template_names = [template.name for template in templates]
+        selected_name, accepted = QInputDialog.getItem(
+            self,
+            title,
+            "Template:",
+            template_names,
+            0,
+            False,
+        )
+        self.focus_image_viewer()
+
+        if not accepted:
+            return None
+
+        for template in templates:
+            if template.name == selected_name:
+                return template
+
+        return None
+
+    def apply_metadata_template(self):
+        template = self.select_metadata_template("Apply Metadata Template")
+
+        if template is None:
+            return
+
+        if self.session.apply_metadata_template(template.id):
+            self.refresh_after_metadata_action()
+
+    def rename_metadata_template(self):
+        template = self.select_metadata_template("Rename Metadata Template")
+
+        if template is None:
+            return
+
+        name, accepted = QInputDialog.getText(
+            self,
+            "Rename Metadata Template",
+            "Template name:",
+            text=template.name,
+        )
+        self.focus_image_viewer()
+
+        if not accepted:
+            return
+
+        if self.session.rename_metadata_template(template.id, name):
+            self.show_navigation_message("Metadata template renamed")
+
+    def delete_metadata_template(self):
+        template = self.select_metadata_template("Delete Metadata Template")
+
+        if template is None:
+            return
+
+        result = QMessageBox.question(
+            self,
+            "Delete Metadata Template",
+            f"Delete metadata template '{template.name}'?",
+            QMessageBox.Delete | QMessageBox.Cancel,
+            QMessageBox.Cancel,
+        )
+        self.focus_image_viewer()
+
+        if result != QMessageBox.Delete:
+            return
+
+        if self.session.delete_metadata_template(template.id):
+            self.show_navigation_message("Metadata template deleted")
 
     def jump_to_first_unreviewed(self):
         if self.session.jump_to_first_unreviewed():

@@ -2,6 +2,25 @@ from dataclasses import dataclass
 from dataclasses import replace
 
 
+METADATA_FIELDS = [
+    "people",
+    "event",
+    "location",
+    "date_taken",
+    "keywords",
+    "notes",
+    "note_by",
+    "confidence",
+]
+
+RECENT_METADATA_FIELDS = [
+    "people",
+    "event",
+    "location",
+    "keywords",
+]
+
+
 @dataclass
 class MetadataState:
     people: str = ""
@@ -37,3 +56,19 @@ class MetadataState:
 
     def copy(self):
         return replace(self)
+
+    def selected(self, fields):
+        return {
+            field: getattr(self, field)
+            for field in fields
+            if field in METADATA_FIELDS
+        }
+
+    def with_fields(self, values):
+        metadata = self.copy()
+
+        for field, value in values.items():
+            if field in METADATA_FIELDS:
+                setattr(metadata, field, value)
+
+        return metadata

@@ -1,7 +1,9 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QFormLayout,
+    QLabel,
     QSpinBox,
 )
 
@@ -12,6 +14,8 @@ class JumpToImageDialog(QDialog):
 
         self.setWindowTitle("Go To Image")
         self.setModal(True)
+
+        self.range_label = QLabel(f"Valid range: 1 to {total}")
 
         self.target = QSpinBox()
         self.target.setMinimum(1)
@@ -26,10 +30,24 @@ class JumpToImageDialog(QDialog):
         buttons.rejected.connect(self.reject)
 
         layout = QFormLayout()
+        layout.addRow(self.range_label)
         layout.addRow("Image number:", self.target)
         layout.addWidget(buttons)
 
         self.setLayout(layout)
+        self.target.setFocus()
+        self.target.selectAll()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.reject()
+            return
+
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.accept()
+            return
+
+        super().keyPressEvent(event)
 
     @staticmethod
     def get_target(current, total, parent=None):

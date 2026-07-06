@@ -2,13 +2,11 @@ from core.metadata_state import MetadataState
 
 
 SUMMARY_LIMITS = {
-    "people": 72,
-    "event": 56,
-    "location": 56,
+    "people": 56,
+    "event": 48,
+    "location": 48,
     "date_taken": 24,
-    "keywords": 64,
-    "note_by": 40,
-    "notes": 96,
+    "note_by": 32,
 }
 
 
@@ -30,13 +28,13 @@ def metadata_summary_lines(metadata: MetadataState | None):
         return []
 
     rows = []
+    keywords = split_list_value(metadata.keywords)
 
     fields = [
         ("People", metadata.people, SUMMARY_LIMITS["people"]),
         ("Event", metadata.event, SUMMARY_LIMITS["event"]),
         ("Location", metadata.location, SUMMARY_LIMITS["location"]),
         ("Date", metadata.date_taken, SUMMARY_LIMITS["date_taken"]),
-        ("Tags", metadata.keywords, SUMMARY_LIMITS["keywords"]),
         ("Note By", metadata.note_by, SUMMARY_LIMITS["note_by"]),
     ]
 
@@ -46,12 +44,26 @@ def metadata_summary_lines(metadata: MetadataState | None):
         if display_value:
             rows.append(f"{label}: {display_value}")
 
+    if keywords:
+        rows.append(f"Keywords: {len(keywords)}")
+
+    if clean_summary_value(metadata.notes):
+        rows.append("Notes: Yes")
+
     if metadata.confidence:
-        rows.append(f"Confidence: {metadata.confidence}/5")
-
-    notes = truncate_summary_value(metadata.notes, SUMMARY_LIMITS["notes"])
-
-    if notes:
-        rows.append(f"Notes: {notes}")
+        rows.append(f"Confidence: {star_rating(metadata.confidence)}")
 
     return rows
+
+
+def split_list_value(value: str):
+    return [
+        clean_summary_value(part)
+        for part in str(value or "").split(",")
+        if clean_summary_value(part)
+    ]
+
+
+def star_rating(value: int):
+    rating = max(0, min(5, int(value or 0)))
+    return "★" * rating + "☆" * (5 - rating)

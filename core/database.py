@@ -2,7 +2,10 @@ import shutil
 import sqlite3
 from pathlib import Path
 
+from core.export.models import ExportRecord
+from core.metadata_state import RECENT_METADATA_FIELDS
 from core.metadata_state import MetadataState
+from core.metadata_template_manager import MetadataTemplate
 from core.review_state import ReviewState
 
 
@@ -72,6 +75,44 @@ class ArchiveDatabase:
                 last_viewed INTEGER NOT NULL DEFAULT 0,
 
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+
+        self.connection.commit()
+
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS metadata_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                category TEXT NOT NULL DEFAULT 'general',
+
+                people TEXT DEFAULT '',
+                event TEXT DEFAULT '',
+                location TEXT DEFAULT '',
+                date_taken TEXT DEFAULT '',
+                keywords TEXT DEFAULT '',
+                notes TEXT DEFAULT '',
+                note_by TEXT DEFAULT '',
+                confidence INTEGER NOT NULL DEFAULT 0,
+
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+                UNIQUE(name, category)
+            )
+            """
+        )
+
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS metadata_recent_values (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_path TEXT NOT NULL,
+                field_name TEXT NOT NULL,
+                value TEXT NOT NULL,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
             """
@@ -272,6 +313,7 @@ class ArchiveDatabase:
         )
 
         self.connection.commit()
+        self.remember_recent_metadata_values(file_path, metadata)
 
     def mark_reviewed(self, file_path: Path):
         self.connection.execute(
@@ -350,6 +392,288 @@ class ArchiveDatabase:
         ).fetchall()
 
         return [Path(row["file_path"]) for row in rows]
+
+    def export_records(self, project_path: Path):
+        rows = self.connection.execute(
+            """
+            SELECT
+                file_path,
+                filename,
+                rotation,
+                has_back,
+                favorite,
+                needs_restore,
+                needs_research,
+                delete_flag,
+                people,
+                event,
+                location,
+                date_taken,
+                keywords,
+                notes,
+                note_by,
+                confidence
+            FROM photos
+            WHERE project_path = ?
+            ORDER BY file_path
+            """,
+            (str(project_path),),
+        ).fetchall()
+
+        return [
+            ExportRecord(
+                file_path=Path(row["file_path"]),
+                filename=row["filename"],
+                metadata=self.metadata_state_from_row(row),
+                review_state=ReviewState(
+                    rotation=row["rotation"],
+                    has_back=bool(row["has_back"]),
+                    favorite=bool(row["favorite"]),
+                    needs_restore=bool(row["needs_restore"]),
+                    needs_research=bool(row["needs_research"]),
+                    delete=bool(row["delete_flag"]),
+                ),
+            )
+            for row in rows
+        ]
+
+    def project_path_for_file(self, file_path: Path):
+        row = self.connection.execute(
+            """
+            SELECT project_path
+            FROM photos
+            WHERE file_path = ?
+            """,
+            (str(file_path),),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        return Path(row["project_path"])
+
+    def remember_recent_metadata_values(self, file_path: Path, metadata: MetadataState):
+        project_path = self.project_path_for_file(file_path)
+
+        if project_path is None:
+            return
+
+        for field_name in RECENT_METADATA_FIELDS:
+            value = " ".join(str(getattr(metadata, field_name, "") or "").split())
+
+            if not value:
+                continue
+
+            self.connection.execute(
+                """
+                DELETE FROM metadata_recent_values
+                WHERE project_path = ?
+                  AND field_name = ?
+                  AND lower(value) = lower(?)
+                """,
+                (str(project_path), field_name, value),
+            )
+
+            self.connection.execute(
+                """
+                INSERT INTO metadata_recent_values (
+                    project_path,
+                    field_name,
+                    value
+                )
+                VALUES (?, ?, ?)
+                """,
+                (str(project_path), field_name, value),
+            )
+
+            rows = self.connection.execute(
+                """
+                SELECT id
+                FROM metadata_recent_values
+                WHERE project_path = ?
+                  AND field_name = ?
+                ORDER BY updated_at DESC, id DESC
+                LIMIT -1 OFFSET 20
+                """,
+                (str(project_path), field_name),
+            ).fetchall()
+
+            for row in rows:
+                self.connection.execute(
+                    """
+                    DELETE FROM metadata_recent_values
+                    WHERE id = ?
+                    """,
+                    (row["id"],),
+                )
+
+        self.connection.commit()
+
+    def recent_metadata_values(self, project_path: Path, field_name: str):
+        if field_name not in RECENT_METADATA_FIELDS:
+            return []
+
+        rows = self.connection.execute(
+            """
+            SELECT value
+            FROM metadata_recent_values
+            WHERE project_path = ?
+              AND field_name = ?
+            ORDER BY updated_at DESC, id DESC
+            LIMIT 20
+            """,
+            (str(project_path), field_name),
+        ).fetchall()
+
+        return [row["value"] for row in rows]
+
+    def metadata_state_from_row(self, row):
+        return MetadataState(
+            people=row["people"] or "",
+            event=row["event"] or "",
+            location=row["location"] or "",
+            date_taken=row["date_taken"] or "",
+            keywords=row["keywords"] or "",
+            notes=row["notes"] or "",
+            note_by=row["note_by"] or "",
+            confidence=row["confidence"] or 0,
+        )
+
+    def list_metadata_templates(self, category="general"):
+        rows = self.connection.execute(
+            """
+            SELECT *
+            FROM metadata_templates
+            WHERE category = ?
+            ORDER BY lower(name)
+            """,
+            (category,),
+        ).fetchall()
+
+        return [
+            MetadataTemplate(
+                id=row["id"],
+                name=row["name"],
+                category=row["category"],
+                metadata=self.metadata_state_from_row(row),
+            )
+            for row in rows
+        ]
+
+    def get_metadata_template(self, template_id: int):
+        row = self.connection.execute(
+            """
+            SELECT *
+            FROM metadata_templates
+            WHERE id = ?
+            """,
+            (template_id,),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        return MetadataTemplate(
+            id=row["id"],
+            name=row["name"],
+            category=row["category"],
+            metadata=self.metadata_state_from_row(row),
+        )
+
+    def save_metadata_template(
+        self,
+        name: str,
+        category: str,
+        metadata: MetadataState,
+    ):
+        if not name:
+            return None
+
+        self.connection.execute(
+            """
+            INSERT INTO metadata_templates (
+                name,
+                category,
+                people,
+                event,
+                location,
+                date_taken,
+                keywords,
+                notes,
+                note_by,
+                confidence
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(name, category) DO UPDATE SET
+                people = excluded.people,
+                event = excluded.event,
+                location = excluded.location,
+                date_taken = excluded.date_taken,
+                keywords = excluded.keywords,
+                notes = excluded.notes,
+                note_by = excluded.note_by,
+                confidence = excluded.confidence,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (
+                name,
+                category,
+                metadata.people,
+                metadata.event,
+                metadata.location,
+                metadata.date_taken,
+                metadata.keywords,
+                metadata.notes,
+                metadata.note_by,
+                metadata.confidence,
+            ),
+        )
+
+        self.connection.commit()
+
+        row = self.connection.execute(
+            """
+            SELECT id
+            FROM metadata_templates
+            WHERE name = ?
+              AND category = ?
+            """,
+            (name, category),
+        ).fetchone()
+
+        return row["id"] if row else None
+
+    def rename_metadata_template(self, template_id: int, name: str):
+        if not name:
+            return False
+
+        try:
+            cursor = self.connection.execute(
+                """
+                UPDATE metadata_templates
+                SET name = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (name, template_id),
+            )
+        except sqlite3.IntegrityError:
+            return False
+
+        self.connection.commit()
+        return cursor.rowcount > 0
+
+    def delete_metadata_template(self, template_id: int):
+        cursor = self.connection.execute(
+            """
+            DELETE FROM metadata_templates
+            WHERE id = ?
+            """,
+            (template_id,),
+        )
+
+        self.connection.commit()
+        return cursor.rowcount > 0
 
     def check_project_health(
         self,

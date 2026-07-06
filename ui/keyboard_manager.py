@@ -75,12 +75,72 @@ class KeyboardManager:
         )
 
         self.register(
+            "metadata.copy_selected",
+            "Copy Selected Metadata Fields",
+            self.window.copy_selected_metadata_fields,
+            None,
+            "Metadata",
+            enabled=self.window.can_copy_metadata,
+            show_in_help=False,
+        )
+
+        self.register(
+            "metadata.paste_selected",
+            "Paste Selected Metadata Fields",
+            self.window.paste_selected_metadata_fields,
+            None,
+            "Metadata",
+            enabled=self.window.can_paste_selected_metadata,
+            show_in_help=False,
+        )
+
+        self.register(
             "metadata.copy_previous",
             "Copy Metadata From Previous",
             self.window.copy_metadata_from_previous,
             None,
             "Metadata",
             enabled=self.window.can_copy_metadata_from_previous,
+            show_in_help=False,
+        )
+
+        self.register(
+            "metadata.template_save",
+            "Save Current Metadata as Template",
+            self.window.save_metadata_template,
+            None,
+            "Metadata",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "metadata.template_apply",
+            "Apply Metadata Template",
+            self.window.apply_metadata_template,
+            None,
+            "Metadata",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "metadata.template_rename",
+            "Rename Metadata Template",
+            self.window.rename_metadata_template,
+            None,
+            "Metadata",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "metadata.template_delete",
+            "Delete Metadata Template",
+            self.window.delete_metadata_template,
+            None,
+            "Metadata",
+            enabled=self.window.has_images,
             show_in_help=False,
         )
 
@@ -105,6 +165,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "export.preview",
+            "Export Preview / Dry Run",
+            self.window.show_export_preview,
+            None,
+            "Export",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.goto_image",
             "Go To Image",
             self.window.open_go_to_image,
@@ -122,6 +192,17 @@ class KeyboardManager:
             "Navigation",
             enabled=self.window.has_images,
             show_in_help=False,
+        )
+
+        self.register(
+            "nav.return_previous_jump",
+            "Return to Previous Jump",
+            self.window.return_to_previous_jump,
+            "Backspace",
+            "Navigation",
+            enabled=self.window.can_return_to_previous_jump,
+            help_key="Backspace",
+            help_name="Return to Previous Jump",
         )
 
         self.register(

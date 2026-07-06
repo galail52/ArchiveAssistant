@@ -13,7 +13,9 @@ from PySide6.QtWidgets import (
 
 
 class FindFilenameDialog(QDialog):
-    def __init__(self, files, parent=None):
+    last_query = ""
+
+    def __init__(self, files, parent=None, initial_query=""):
         super().__init__(parent)
 
         self.files = list(files)
@@ -27,6 +29,7 @@ class FindFilenameDialog(QDialog):
         self.label = QLabel("Search filename:")
         self.search = QLineEdit()
         self.search.setPlaceholderText("Example: IMG_3487 or Christmas")
+        self.search.setText(initial_query or self.last_query)
 
         self.results = QListWidget()
 
@@ -49,6 +52,7 @@ class FindFilenameDialog(QDialog):
         self.setLayout(layout)
         self.refresh_results()
         self.search.setFocus()
+        self.search.selectAll()
 
     def refresh_results(self):
         query = self.search.text().strip().lower()
@@ -74,16 +78,22 @@ class FindFilenameDialog(QDialog):
         if item is None:
             return
 
+        FindFilenameDialog.last_query = self.search.text()
         self.selected_index = item.data(Qt.UserRole)
         self.accept()
 
     def accept_item(self, item):
+        FindFilenameDialog.last_query = self.search.text()
         self.selected_index = item.data(Qt.UserRole)
         self.accept()
 
+    def reject(self):
+        FindFilenameDialog.last_query = self.search.text()
+        super().reject()
+
     @staticmethod
-    def get_index(files, parent=None):
-        dialog = FindFilenameDialog(files, parent)
+    def get_index(files, parent=None, initial_query=""):
+        dialog = FindFilenameDialog(files, parent, initial_query)
 
         if dialog.exec() != QDialog.Accepted:
             return None

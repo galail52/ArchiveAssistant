@@ -115,6 +115,66 @@ class MetadataClipboardTests(unittest.TestCase):
 
                 os.chdir(original_cwd)
 
+    def test_copy_and_paste_selected_metadata_fields(self):
+        original_cwd = Path.cwd()
+
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            os.chdir(temp_path)
+
+            session = None
+
+            try:
+                session = self.make_session(temp_path)
+                session.update_metadata(
+                    people="Ada Lovelace",
+                    event="Family Reunion",
+                    location="Murray, Utah",
+                    date_taken="1958-07",
+                    keywords="picnic, summer",
+                    notes="Standing near the old house.",
+                    note_by="Trent",
+                    confidence=4,
+                )
+
+                self.assertTrue(
+                    session.copy_selected_metadata(
+                        ["people", "location", "keywords"]
+                    )
+                )
+
+                session.next_image()
+                session.update_metadata(
+                    people="Grace Hopper",
+                    event="Graduation",
+                    location="Boston, Massachusetts",
+                    date_taken="1962",
+                    keywords="school",
+                    notes="Existing note.",
+                    note_by="Archivist",
+                    confidence=2,
+                )
+
+                self.assertTrue(
+                    session.paste_selected_metadata(
+                        ["people", "keywords"]
+                    )
+                )
+                self.assertEqual(session.metadata.people, "Ada Lovelace")
+                self.assertEqual(session.metadata.event, "Graduation")
+                self.assertEqual(
+                    session.metadata.location,
+                    "Boston, Massachusetts",
+                )
+                self.assertEqual(session.metadata.keywords, "picnic, summer")
+                self.assertEqual(session.metadata.notes, "Existing note.")
+                self.assertEqual(session.metadata.confidence, 2)
+            finally:
+                if session is not None:
+                    session.database.connection.close()
+
+                os.chdir(original_cwd)
+
 
 if __name__ == "__main__":
     unittest.main()

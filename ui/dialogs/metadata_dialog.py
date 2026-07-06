@@ -1,8 +1,10 @@
 from datetime import datetime
 
+from PySide6.QtCore import QStringListModel
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
+    QCompleter,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
@@ -63,7 +65,7 @@ class StarRating(QWidget):
 
 
 class MetadataDialog(QDialog):
-    def __init__(self, metadata, parent=None):
+    def __init__(self, metadata, parent=None, recent_values=None):
         super().__init__(parent)
 
         self.settings = QSettings(
@@ -85,6 +87,8 @@ class MetadataDialog(QDialog):
         )
         self.keywords = QLineEdit(metadata.keywords)
         self.note_by = QLineEdit(metadata.note_by)
+        self.completers = []
+        self.add_completers(recent_values or {})
 
         self.confidence = StarRating(metadata.confidence)
 
@@ -118,6 +122,27 @@ class MetadataDialog(QDialog):
 
         self.people.setFocus()
         self.people.selectAll()
+
+    def add_completers(self, recent_values):
+        fields = {
+            "people": self.people,
+            "event": self.event,
+            "location": self.location,
+            "keywords": self.keywords,
+        }
+
+        for field_name, widget in fields.items():
+            values = recent_values.get(field_name, [])
+
+            if not values:
+                continue
+
+            completer = QCompleter(widget)
+            completer.setCaseSensitivity(Qt.CaseInsensitive)
+            completer.setCompletionMode(QCompleter.PopupCompletion)
+            completer.setModel(QStringListModel(values, completer))
+            widget.setCompleter(completer)
+            self.completers.append(completer)
 
     def restore_dialog_geometry(self):
         geometry = self.settings.value("metadata_dialog/geometry")
@@ -249,8 +274,8 @@ class MetadataDialog(QDialog):
         super().keyPressEvent(event)
 
     @staticmethod
-    def get_metadata(metadata, parent=None):
-        dialog = MetadataDialog(metadata, parent)
+    def get_metadata(metadata, parent=None, recent_values=None):
+        dialog = MetadataDialog(metadata, parent, recent_values)
 
         if dialog.exec() != QDialog.Accepted:
             return None

@@ -67,6 +67,7 @@ The user should spend their time thinking about photographs, not navigating soft
 | End | Last Image |
 | Page Up | Back 10 Images |
 | Page Down | Forward 10 Images |
+| Backspace | Return to Previous Jump |
 | Ctrl + ← | Back 50 Images |
 | Ctrl + → | Forward 50 Images |
 
@@ -99,6 +100,17 @@ Review actions should require only a single keystroke whenever practical.
 | Esc | Cancel Metadata |
 
 Metadata entry should be optimized for keyboard-only operation.
+
+Additional metadata tools are available through the Command Palette:
+
+- Copy Metadata From Previous
+- Copy Selected Metadata Fields
+- Paste Selected Metadata Fields
+- Save Current Metadata as Template
+- Apply Metadata Template
+- Rename Metadata Template
+- Delete Metadata Template
+- Export Preview / Dry Run
 
 ---
 
@@ -218,7 +230,6 @@ Possible future shortcuts:
 
 | Key | Planned Use |
 |-----|--------------|
-| T | Metadata Templates |
 | O | OCR |
 | L | Location Templates |
 | N | Person Templates |
@@ -233,9 +244,6 @@ Future development should continue reducing reliance on the mouse.
 
 Potential improvements include:
 
-- Metadata templates
-- Copy previous metadata
-- Copy selected fields
 - AI suggestions
 - Quick accept AI suggestions
 

@@ -1,8 +1,14 @@
 from pathlib import Path
 
 from core.database import ArchiveDatabase
+from core.export import ExportFormat
+from core.export import ExportJob
+from core.export import ExportManager
 from core.image_manager import ImageManager
+from core.metadata_patch import MetadataPatch
+from core.metadata_state import RECENT_METADATA_FIELDS
 from core.metadata_state import MetadataState
+from core.metadata_template_manager import MetadataTemplateManager
 from core.navigator import Navigator
 from core.review_snapshot import ReviewSnapshot
 from core.review_state import ReviewState
@@ -17,11 +23,15 @@ class ReviewSession:
         self.view_state = ViewState()
         self.metadata_state = MetadataState()
         self.metadata_clipboard = None
+        self.metadata_patch_clipboard = None
         self.last_snapshot = None
+        self.previous_jump_index = None
 
         self.database = ArchiveDatabase(
             Path("data") / "archive.db"
         )
+        self.template_manager = MetadataTemplateManager(self.database)
+        self.export_manager = ExportManager()
 
     @property
     def state(self):
@@ -36,6 +46,7 @@ class ReviewSession:
         self.view_state.reset()
         self.metadata_state.reset()
         self.last_snapshot = None
+        self.previous_jump_index = None
 
         for file_path in self.images.files:
             self.database.ensure_photo(
@@ -180,11 +191,155 @@ class ReviewSession:
         self.save_current_metadata()
         return True
 
+    def copy_selected_metadata(self, fields):
+        if not self.can_copy_metadata():
+            return False
+
+        patch = MetadataPatch.from_metadata(self.metadata_state, fields)
+
+        if not patch.fields:
+            return False
+
+        self.metadata_patch_clipboard = patch
+        return True
+
+    def can_paste_selected_metadata(self):
+        return (
+            self.current_file is not None
+            and self.metadata_patch_clipboard is not None
+            and bool(self.metadata_patch_clipboard.fields)
+        )
+
+    def paste_selected_metadata(self, fields=None):
+        if not self.can_paste_selected_metadata():
+            return False
+
+        patch = self.metadata_patch_clipboard
+
+        if fields is not None:
+            selected_values = {
+                field: patch.values[field]
+                for field in fields
+                if field in patch.values
+            }
+            patch = MetadataPatch(selected_values)
+
+        if not patch.fields:
+            return False
+
+        self.metadata_state = patch.apply_to(self.metadata_state)
+        self.save_current_metadata()
+        return True
+
+    def recent_metadata_values(self):
+        if self.images.project_path is None:
+            return {field: [] for field in RECENT_METADATA_FIELDS}
+
+        return {
+            field: self.database.recent_metadata_values(
+                self.images.project_path,
+                field,
+            )
+            for field in RECENT_METADATA_FIELDS
+        }
+
+    def metadata_templates(self):
+        return self.template_manager.templates()
+
+    def save_current_metadata_template(self, name: str):
+        if self.current_file is None:
+            return None
+
+        return self.template_manager.save_template(name, self.metadata_state)
+
+    def apply_metadata_template(self, template_id: int):
+        if self.current_file is None:
+            return False
+
+        template = self.template_manager.template(template_id)
+
+        if template is None:
+            return False
+
+        self.metadata_state = template.metadata.copy()
+        self.save_current_metadata()
+        return True
+
+    def rename_metadata_template(self, template_id: int, name: str):
+        return self.template_manager.rename_template(template_id, name)
+
+    def delete_metadata_template(self, template_id: int):
+        return self.template_manager.delete_template(template_id)
+
+    def export_records(self):
+        if self.images.project_path is None:
+            return []
+
+        return self.database.export_records(self.images.project_path)
+
+    def export_metadata(
+        self,
+        export_format: ExportFormat,
+        output_path: Path,
+        dry_run=True,
+    ):
+        if self.images.project_path is None:
+            return None
+
+        job = ExportJob(
+            format=export_format,
+            project_path=self.images.project_path,
+            output_path=output_path,
+            dry_run=dry_run,
+        )
+
+        return self.export_manager.export(job, self.export_records())
+
+    def export_preview(self):
+        if self.images.project_path is None:
+            return None
+
+        return self.export_metadata(
+            ExportFormat.JSON,
+            self.images.project_path / "archiveassistant_export_preview.json",
+            dry_run=True,
+        )
+
     def move(self, offset: int):
-        self.navigate(lambda: self.navigator.move(offset))
+        return self.navigate(lambda: self.navigator.move(offset))
+
+    def jump_by(self, offset: int):
+        if self.image_count == 0:
+            return False
+
+        return self.jump_to(self.images.index + offset)
 
     def jump_to(self, index: int):
-        self.navigate(lambda: self.navigator.jump_to(index))
+        if self.image_count == 0:
+            return False
+
+        target = max(0, min(index, self.image_count - 1))
+
+        if target != self.images.index:
+            self.previous_jump_index = self.images.index
+
+        return self.navigate(lambda: self.navigator.jump_to(target))
+
+    def can_return_to_previous_jump(self):
+        return (
+            self.image_count > 0
+            and self.previous_jump_index is not None
+            and 0 <= self.previous_jump_index < self.image_count
+            and self.previous_jump_index != self.images.index
+        )
+
+    def return_to_previous_jump(self):
+        if not self.can_return_to_previous_jump():
+            return False
+
+        target = self.previous_jump_index
+        self.previous_jump_index = self.images.index
+        return self.navigate(lambda: self.navigator.jump_to(target))
 
     def jump_to_first_unreviewed(self):
         for index, file_path in enumerate(self.images.files):
@@ -243,14 +398,14 @@ class ReviewSession:
         return False
 
     def first(self):
-        self.navigate(self.navigator.first)
+        return self.jump_to(0)
 
     def last(self):
-        self.navigate(self.navigator.last)
+        return self.jump_to(self.image_count - 1)
 
     def navigate(self, action):
         if self.image_count == 0:
-            return
+            return False
 
         previous_file = self.current_file
 
@@ -261,12 +416,15 @@ class ReviewSession:
             self.database.mark_reviewed(previous_file)
             self.last_snapshot = None
             self.load_current_state()
+            return True
+
+        return False
 
     def next_image(self):
-        self.move(1)
+        return self.move(1)
 
     def previous_image(self):
-        self.move(-1)
+        return self.move(-1)
 
     def set_zoom_fit(self):
         self.view_state.set_fit()
