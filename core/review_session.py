@@ -16,6 +16,7 @@ class ReviewSession:
         self.review_state = ReviewState()
         self.view_state = ViewState()
         self.metadata_state = MetadataState()
+        self.metadata_clipboard = None
         self.last_snapshot = None
 
         self.database = ArchiveDatabase(
@@ -152,6 +153,30 @@ class ReviewSession:
 
         previous_file = self.images.files[self.images.index - 1]
         self.metadata_state = self.database.load_metadata(previous_file)
+        self.save_current_metadata()
+        return True
+
+    def can_copy_metadata(self):
+        return self.current_file is not None
+
+    def copy_metadata(self):
+        if not self.can_copy_metadata():
+            return False
+
+        self.metadata_clipboard = self.metadata_state.copy()
+        return True
+
+    def can_paste_metadata(self):
+        return (
+            self.current_file is not None
+            and self.metadata_clipboard is not None
+        )
+
+    def paste_metadata(self):
+        if not self.can_paste_metadata():
+            return False
+
+        self.metadata_state = self.metadata_clipboard.copy()
         self.save_current_metadata()
         return True
 

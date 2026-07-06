@@ -147,6 +147,12 @@ class MainWindow(QMainWindow):
     def can_copy_metadata_from_previous(self):
         return self.session.can_copy_metadata_from_previous()
 
+    def can_copy_metadata(self):
+        return self.session.can_copy_metadata()
+
+    def can_paste_metadata(self):
+        return self.session.can_paste_metadata()
+
     def refresh_ui(self):
         current = self.session.current_file
 
@@ -307,6 +313,14 @@ class MainWindow(QMainWindow):
 
     def copy_metadata_from_previous(self):
         if self.session.copy_metadata_from_previous():
+            self.refresh_after_action()
+
+    def copy_metadata(self):
+        if self.session.copy_metadata():
+            self.refresh_after_action()
+
+    def paste_metadata(self):
+        if self.session.paste_metadata():
             self.refresh_after_action()
 
     def jump_to_first_unreviewed(self):

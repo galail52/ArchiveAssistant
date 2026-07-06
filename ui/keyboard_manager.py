@@ -53,14 +53,35 @@ class KeyboardManager:
         )
 
         self.register(
+            "metadata.copy",
+            "Copy Metadata",
+            self.window.copy_metadata,
+            "C",
+            "Metadata",
+            enabled=self.window.can_copy_metadata,
+            help_key="C",
+            help_name="Copy Metadata",
+        )
+
+        self.register(
+            "metadata.paste",
+            "Paste Metadata",
+            self.window.paste_metadata,
+            "P",
+            "Metadata",
+            enabled=self.window.can_paste_metadata,
+            help_key="P",
+            help_name="Paste Metadata",
+        )
+
+        self.register(
             "metadata.copy_previous",
             "Copy Metadata From Previous",
             self.window.copy_metadata_from_previous,
-            "C",
+            None,
             "Metadata",
             enabled=self.window.can_copy_metadata_from_previous,
-            help_key="C",
-            help_name="Copy Previous Metadata",
+            show_in_help=False,
         )
 
         self.register(

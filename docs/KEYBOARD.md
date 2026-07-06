@@ -92,6 +92,8 @@ Review actions should require only a single keystroke whenever practical.
 | Shortcut | Action |
 |----------|--------|
 | M | Open Metadata |
+| C | Copy Metadata |
+| P | Paste Metadata |
 | Ctrl + S | Save Metadata |
 | Ctrl + Enter | Save While Editing Notes |
 | Esc | Cancel Metadata |
@@ -216,8 +218,6 @@ Possible future shortcuts:
 
 | Key | Planned Use |
 |-----|--------------|
-| C | Copy Metadata |
-| P | Paste Metadata |
 | T | Metadata Templates |
 | O | OCR |
 | L | Location Templates |

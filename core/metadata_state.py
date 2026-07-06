@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from dataclasses import replace
 
 
 @dataclass
@@ -33,3 +34,6 @@ class MetadataState:
             "note_by": self.note_by,
             "confidence": self.confidence,
         }
+
+    def copy(self):
+        return replace(self)
