@@ -264,6 +264,18 @@ Regression prevention is more valuable than adding features quickly.
 
 ---
 
+# Validation
+
+Before completing a task:
+
+- Run unit tests if available.
+- Run compileall.
+- Never leave the repository in a non-working state.
+- Mention every file changed.
+- Mention every command executed.
+
+---
+
 # Future Contributors
 
 When making changes:
