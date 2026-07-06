@@ -17,14 +17,18 @@ class SidePanel(QWidget):
 
         self.keyboard_help = keyboard_help
 
-        self.zoom = StatusCard("🔎 Zoom")
+        self.zoom = StatusCard(" Zoom")
         self.pan = StatusCard("↔ Pan")
         self.rotation = StatusCard("↻ Orientation")
-        self.back = StatusCard("📄 Back")
+        self.back = StatusCard(" Back")
         self.favorite = StatusCard("⭐ Favorite")
-        self.restore = StatusCard("🛠 Restore")
-        self.research = StatusCard("🔍 Research")
-        self.delete = StatusCard("🗑 Delete")
+        self.restore = StatusCard(" Restore")
+        self.research = StatusCard(" Research")
+        self.delete = StatusCard(" Delete")
+
+        self.metadata_summary = QLabel("No metadata")
+        self.metadata_summary.setWordWrap(True)
+        self.metadata_summary.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.build_ui()
         self.update_status()
@@ -53,6 +57,25 @@ class SidePanel(QWidget):
             grid.addWidget(card, index // 2, index % 2)
 
         layout.addLayout(grid)
+
+        metadata_title = QLabel("Metadata")
+        metadata_title.setAlignment(Qt.AlignCenter)
+        metadata_title.setStyleSheet("""
+            font-size:13pt;
+            font-weight:bold;
+            margin-top:5px;
+        """)
+        layout.addWidget(metadata_title)
+
+        self.metadata_summary.setStyleSheet("""
+            font-size:10pt;
+            color:#d0d0d0;
+            background-color:#303030;
+            border:1px solid #4a4a4a;
+            border-radius:8px;
+            padding:8px;
+        """)
+        layout.addWidget(self.metadata_summary)
 
         keyboard_title = QLabel("Keyboard")
         keyboard_title.setAlignment(Qt.AlignCenter)
@@ -83,6 +106,7 @@ class SidePanel(QWidget):
         )
 
         layout.addWidget(scroll, 1)
+
         self.setLayout(layout)
 
     @property
@@ -115,6 +139,7 @@ class SidePanel(QWidget):
         research=False,
         delete=False,
         view_state=None,
+        metadata=None,
     ):
         if view_state is None:
             zoom_label = "Fit"
@@ -135,8 +160,40 @@ class SidePanel(QWidget):
             rotation != 0,
             "#7fc8ff",
         )
+
         self.back.set_value("YES" if back else "NO", back, "#55ff55")
         self.favorite.set_value("YES" if favorite else "NO", favorite, "#ffd54a")
         self.restore.set_value("YES" if restore else "NO", restore, "#ffb347")
         self.research.set_value("YES" if research else "NO", research, "#b388ff")
         self.delete.set_value("YES" if delete else "NO", delete, "#ff6666")
+
+        self.update_metadata_summary(metadata)
+
+    def update_metadata_summary(self, metadata=None):
+        if metadata is None:
+            self.metadata_summary.setText("No metadata")
+            return
+
+        rows = []
+
+        if metadata.people:
+            rows.append(f"People: {metadata.people}")
+        if metadata.event:
+            rows.append(f"Event: {metadata.event}")
+        if metadata.location:
+            rows.append(f"Location: {metadata.location}")
+        if metadata.date_taken:
+            rows.append(f"Date: {metadata.date_taken}")
+        if metadata.keywords:
+            rows.append(f"Tags: {metadata.keywords}")
+        if metadata.note_by:
+            rows.append(f"Note By: {metadata.note_by}")
+        if metadata.confidence:
+            rows.append(f"Confidence: {'★' * metadata.confidence}")
+        if metadata.notes:
+            preview = metadata.notes.replace("\n", " ")
+            if len(preview) > 90:
+                preview = preview[:87] + "..."
+            rows.append(f"Notes: {preview}")
+
+        self.metadata_summary.setText("\n".join(rows) if rows else "No metadata")

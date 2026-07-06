@@ -47,10 +47,13 @@ class MainWindow(QMainWindow):
 
         self.header_panel = HeaderPanel()
         self.image_panel = ImagePanel(self.session)
+
         self.keyboard_manager.register_shortcuts()
+
         self.side_panel = SidePanel(
             self.keyboard_manager.help_text()
         )
+
         self.thumbnail_strip = ThumbnailStrip()
 
         self.previous_button = QPushButton("◀ Previous")
@@ -65,6 +68,7 @@ class MainWindow(QMainWindow):
         content = QHBoxLayout()
         content.setContentsMargins(0, 0, 0, 0)
         content.setSpacing(8)
+
         content.addWidget(self.image_panel, 1)
         content.addWidget(self.side_panel)
 
@@ -76,6 +80,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
         layout.setContentsMargins(6, 6, 6, 6)
         layout.setSpacing(6)
+
         layout.addWidget(self.header_panel)
         layout.addLayout(content, 1)
         layout.addWidget(self.thumbnail_strip)
@@ -153,7 +158,6 @@ class MainWindow(QMainWindow):
         )
 
         self.thumbnail_strip.set_current(self.session.images.index)
-
         self.refresh_status()
         self.update_buttons()
         self.keyboard_manager.update_enabled_states()
@@ -162,6 +166,7 @@ class MainWindow(QMainWindow):
         self.side_panel.update_status(
             **self.session.state.as_dict(),
             view_state=self.session.view_state,
+            metadata=self.session.metadata,
         )
 
     def update_buttons(self):
