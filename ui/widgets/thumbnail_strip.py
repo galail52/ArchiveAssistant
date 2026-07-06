@@ -15,6 +15,8 @@ class ThumbnailStrip(QWidget):
 
         self.files = []
         self.current_index = 0
+        self.visible_start = 0
+        self.visible_end = 0
         self.state_provider = None
         self.thumbnail_cache = ThumbnailCache(max_items=500)
 
@@ -46,16 +48,20 @@ class ThumbnailStrip(QWidget):
         self.files = files
         self.state_provider = state_provider
         self.current_index = 0
+        self.visible_start = 0
+        self.visible_end = 0
         self.thumbnail_cache.clear()
         self.update_cards()
 
     def set_current(self, index):
         if not self.files:
             self.current_index = 0
+            self.visible_start = 0
+            self.visible_end = 0
             self.clear_cards()
             return
 
-        self.current_index = index
+        self.current_index = max(0, min(index, len(self.files) - 1))
         self.update_cards()
 
     def update_cards(self):
@@ -64,18 +70,25 @@ class ThumbnailStrip(QWidget):
             return
 
         start, end = self.visible_range()
-        visible_files = self.files[start:end]
-        self.thumbnail_cache.preload(visible_files)
+
+        if start != self.visible_start or end != self.visible_end:
+            visible_files = self.files[start:end]
+            self.thumbnail_cache.preload(visible_files)
+
+        self.visible_start = start
+        self.visible_end = end
 
         for slot, card in enumerate(self.cards):
             index = start + slot
 
             if index >= end:
                 card.clear()
-                card.hide()
+                if card.isVisible():
+                    card.hide()
                 continue
 
-            card.show()
+            if not card.isVisible():
+                card.show()
             card.set_image(index, self.files[index])
             card.set_selected(index == self.current_index)
             self.apply_flags(card)

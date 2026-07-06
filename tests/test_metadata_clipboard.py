@@ -10,23 +10,27 @@ from core.review_session import ReviewSession
 
 
 class MetadataClipboardTests(unittest.TestCase):
+    def make_session(self, temp_path):
+        project_path = temp_path / "project"
+        project_path.mkdir()
+        (project_path / "001.jpg").touch()
+        (project_path / "002.jpg").touch()
+
+        session = ReviewSession()
+        session.open_project(project_path)
+        return session
+
     def test_copy_and_paste_metadata_between_images(self):
         original_cwd = Path.cwd()
 
         with TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
-            project_path = temp_path / "project"
-            project_path.mkdir()
-            (project_path / "001.jpg").touch()
-            (project_path / "002.jpg").touch()
-
             os.chdir(temp_path)
 
             session = None
 
             try:
-                session = ReviewSession()
-                session.open_project(project_path)
+                session = self.make_session(temp_path)
 
                 session.update_metadata(
                     people="Ada Lovelace",
@@ -53,6 +57,58 @@ class MetadataClipboardTests(unittest.TestCase):
                 self.assertEqual(session.metadata.notes, "Standing near the old house.")
                 self.assertEqual(session.metadata.note_by, "Trent")
                 self.assertEqual(session.metadata.confidence, 4)
+            finally:
+                if session is not None:
+                    session.database.connection.close()
+
+                os.chdir(original_cwd)
+
+    def test_paste_requires_copied_metadata(self):
+        original_cwd = Path.cwd()
+
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            os.chdir(temp_path)
+
+            session = None
+
+            try:
+                session = self.make_session(temp_path)
+                self.assertFalse(session.can_paste_metadata())
+                self.assertFalse(session.paste_metadata())
+            finally:
+                if session is not None:
+                    session.database.connection.close()
+
+                os.chdir(original_cwd)
+
+    def test_copy_previous_metadata_stays_available(self):
+        original_cwd = Path.cwd()
+
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            os.chdir(temp_path)
+
+            session = None
+
+            try:
+                session = self.make_session(temp_path)
+                session.update_metadata(
+                    people="Previous Person",
+                    event="Previous Event",
+                    location="",
+                    date_taken="",
+                    keywords="",
+                    notes="",
+                    note_by="",
+                    confidence=0,
+                )
+
+                session.next_image()
+
+                self.assertTrue(session.copy_metadata_from_previous())
+                self.assertEqual(session.metadata.people, "Previous Person")
+                self.assertEqual(session.metadata.event, "Previous Event")
             finally:
                 if session is not None:
                     session.database.connection.close()

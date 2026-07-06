@@ -1,13 +1,16 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QLabel, QFrame, QSizePolicy, QVBoxLayout
 
 
 class StatusCard(QFrame):
+    clicked = Signal()
+
     def __init__(self, title: str):
         super().__init__()
 
         self.title = QLabel(title)
         self.value = QLabel("NO")
+        self.clickable = False
 
         self.build_ui()
         self.set_active(False)
@@ -40,6 +43,10 @@ class StatusCard(QFrame):
         self.value.setText(text)
         self.set_active(active, accent)
 
+    def set_clickable(self, clickable=True):
+        self.clickable = clickable
+        self.setCursor(Qt.PointingHandCursor if clickable else Qt.ArrowCursor)
+
     def set_active(self, active=False, accent="#7fc8ff"):
         border = accent if active else "#4a4a4a"
         background = "#3f3f3f" if active else "#363636"
@@ -65,3 +72,11 @@ class StatusCard(QFrame):
             border:none;
             background:transparent;
         """)
+
+    def mousePressEvent(self, event):
+        if self.clickable and event.button() == Qt.LeftButton:
+            self.clicked.emit()
+            event.accept()
+            return
+
+        super().mousePressEvent(event)

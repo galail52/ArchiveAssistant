@@ -11,11 +11,13 @@ class ImagePanel(QWidget):
 
         self.session = session
         self.current_pixmap: QPixmap | None = None
+        self.current_filename: Path | None = None
 
         self.setSizePolicy(
             QSizePolicy.Expanding,
             QSizePolicy.Expanding,
         )
+        self.setFocusPolicy(Qt.StrongFocus)
 
     def sizeHint(self):
         return QSize(900, 600)
@@ -24,8 +26,13 @@ class ImagePanel(QWidget):
         return QSize(300, 220)
 
     def load_image(self, filename: Path):
+        if self.current_filename == filename:
+            return False
+
+        self.current_filename = filename
         self.current_pixmap = QPixmap(str(filename))
         self.update()
+        return True
 
     def transformed_pixmap(self):
         if self.current_pixmap is None:

@@ -40,6 +40,18 @@ class ThumbnailCard(QFrame):
         self.update()
 
     def clear(self):
+        if (
+            self.index is None
+            and self.filename is None
+            and self.pixmap is None
+            and not self.favorite
+            and not self.restore
+            and not self.delete
+            and not self.back
+            and not self.selected
+        ):
+            return
+
         self.index = None
         self.filename = None
         self.selected = False

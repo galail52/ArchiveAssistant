@@ -48,6 +48,7 @@ class FindFilenameDialog(QDialog):
 
         self.setLayout(layout)
         self.refresh_results()
+        self.search.setFocus()
 
     def refresh_results(self):
         query = self.search.text().strip().lower()

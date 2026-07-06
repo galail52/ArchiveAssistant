@@ -23,6 +23,7 @@ class CommandPalette(QDialog):
 
         self.prompt = QLabel("Command")
         self.edit = QLineEdit()
+        self.edit.setPlaceholderText("Type a command name")
         self.edit.textChanged.connect(self.update_matches)
 
         self.preview = QLabel("")
@@ -44,6 +45,7 @@ class CommandPalette(QDialog):
         self.setLayout(layout)
 
         self.update_matches()
+        self.edit.setFocus()
 
     def update_matches(self):
         self.model.set_query(self.edit.text())

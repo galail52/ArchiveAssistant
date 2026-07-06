@@ -553,7 +553,12 @@ class KeyboardManager:
             action.setEnabled(command.is_enabled())
 
     def help_text(self):
+        commands = self.registry.help_commands()
+        key_width = max(
+            [len(command.help_display_key) for command in commands] + [0]
+        )
+
         return "\n".join(
-            f"{command.help_display_key:<11} {command.help_display_name}"
-            for command in self.registry.help_commands()
+            f"{command.help_display_key:<{key_width}}  {command.help_display_name}"
+            for command in commands
         )

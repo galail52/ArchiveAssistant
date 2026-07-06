@@ -8,14 +8,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from core.metadata_summary import metadata_summary_lines
 from ui.widgets.status_card import StatusCard
 
 
 class SidePanel(QWidget):
-    def __init__(self, keyboard_help=""):
+    def __init__(self, keyboard_help="", review_actions=None):
         super().__init__()
 
         self.keyboard_help = keyboard_help
+        self.review_actions = review_actions or {}
 
         self.zoom = StatusCard(" Zoom")
         self.pan = StatusCard("↔ Pan")
@@ -31,6 +33,7 @@ class SidePanel(QWidget):
         self.metadata_summary.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.build_ui()
+        self.connect_review_actions()
         self.update_status()
 
     def build_ui(self):
@@ -122,6 +125,24 @@ class SidePanel(QWidget):
             self.delete,
         ]
 
+    def connect_review_actions(self):
+        card_actions = {
+            self.back: "back",
+            self.favorite: "favorite",
+            self.restore: "restore",
+            self.research: "research",
+            self.delete: "delete",
+        }
+
+        for card, action_name in card_actions.items():
+            callback = self.review_actions.get(action_name)
+
+            if callback is None:
+                continue
+
+            card.set_clickable(True)
+            card.clicked.connect(callback)
+
     def rotation_label(self, rotation):
         return {
             0: "Normal",
@@ -170,30 +191,5 @@ class SidePanel(QWidget):
         self.update_metadata_summary(metadata)
 
     def update_metadata_summary(self, metadata=None):
-        if metadata is None:
-            self.metadata_summary.setText("No metadata")
-            return
-
-        rows = []
-
-        if metadata.people:
-            rows.append(f"People: {metadata.people}")
-        if metadata.event:
-            rows.append(f"Event: {metadata.event}")
-        if metadata.location:
-            rows.append(f"Location: {metadata.location}")
-        if metadata.date_taken:
-            rows.append(f"Date: {metadata.date_taken}")
-        if metadata.keywords:
-            rows.append(f"Tags: {metadata.keywords}")
-        if metadata.note_by:
-            rows.append(f"Note By: {metadata.note_by}")
-        if metadata.confidence:
-            rows.append(f"Confidence: {'★' * metadata.confidence}")
-        if metadata.notes:
-            preview = metadata.notes.replace("\n", " ")
-            if len(preview) > 90:
-                preview = preview[:87] + "..."
-            rows.append(f"Notes: {preview}")
-
+        rows = metadata_summary_lines(metadata)
         self.metadata_summary.setText("\n".join(rows) if rows else "No metadata")

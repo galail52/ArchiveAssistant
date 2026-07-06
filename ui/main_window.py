@@ -53,7 +53,14 @@ class MainWindow(QMainWindow):
         self.keyboard_manager.register_shortcuts()
 
         self.side_panel = SidePanel(
-            self.keyboard_manager.help_text()
+            self.keyboard_manager.help_text(),
+            review_actions={
+                "back": self.toggle_back,
+                "favorite": self.toggle_favorite,
+                "restore": self.toggle_restore,
+                "research": self.toggle_research,
+                "delete": self.toggle_delete,
+            },
         )
 
         self.thumbnail_strip = ThumbnailStrip()
@@ -65,6 +72,23 @@ class MainWindow(QMainWindow):
         self.create_menu()
         self.connect_controls()
         self.refresh_ui()
+        self.restore_window_geometry()
+        self.focus_image_viewer()
+
+    def restore_window_geometry(self):
+        geometry = self.settings.value("main_window/geometry")
+
+        if geometry is not None:
+            self.restoreGeometry(geometry)
+
+    def save_window_geometry(self):
+        self.settings.setValue(
+            "main_window/geometry",
+            self.saveGeometry(),
+        )
+
+    def focus_image_viewer(self):
+        self.image_panel.setFocus()
 
     def build_ui(self):
         content = QHBoxLayout()
@@ -115,6 +139,7 @@ class MainWindow(QMainWindow):
 
     def open_project(self):
         self.project_controller.open_project()
+        self.focus_image_viewer()
 
     def show_database_stats(self):
         self.project_controller.show_database_stats()
@@ -172,6 +197,7 @@ class MainWindow(QMainWindow):
         self.refresh_status()
         self.update_buttons()
         self.keyboard_manager.update_enabled_states()
+        self.focus_image_viewer()
 
     def refresh_status(self):
         self.side_panel.update_status(
@@ -199,12 +225,19 @@ class MainWindow(QMainWindow):
         self.update_buttons()
         self.keyboard_manager.update_enabled_states()
         self.image_panel.update()
+        self.focus_image_viewer()
+
+    def refresh_after_metadata_action(self):
+        self.refresh_status()
+        self.keyboard_manager.update_enabled_states()
+        self.focus_image_viewer()
 
     def refresh_after_view_action(self):
         self.image_panel.clamp_pan()
         self.image_panel.update()
         self.refresh_status()
         self.keyboard_manager.update_enabled_states()
+        self.focus_image_viewer()
 
     def move_images(self, offset):
         self.session.move(offset)
@@ -241,10 +274,13 @@ class MainWindow(QMainWindow):
         self.refresh_ui()
 
     def open_command_palette(self):
-        command = CommandPalette.get_command(
-            self.command_registry,
-            self,
-        )
+        try:
+            command = CommandPalette.get_command(
+                self.command_registry,
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
 
         if command is None:
             return
@@ -260,11 +296,14 @@ class MainWindow(QMainWindow):
         if total == 0:
             return
 
-        target = JumpToImageDialog.get_target(
-            current_num,
-            total,
-            self,
-        )
+        try:
+            target = JumpToImageDialog.get_target(
+                current_num,
+                total,
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
 
         if target is None:
             return
@@ -276,10 +315,13 @@ class MainWindow(QMainWindow):
         if not self.has_images():
             return
 
-        index = FindFilenameDialog.get_index(
-            self.session.images.files,
-            self,
-        )
+        try:
+            index = FindFilenameDialog.get_index(
+                self.session.images.files,
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
 
         if index is None:
             return
@@ -303,7 +345,7 @@ class MainWindow(QMainWindow):
             )
         finally:
             self.metadata_dialog_open = False
-            self.image_panel.setFocus()
+            self.focus_image_viewer()
 
         if values is None:
             return
@@ -313,15 +355,15 @@ class MainWindow(QMainWindow):
 
     def copy_metadata_from_previous(self):
         if self.session.copy_metadata_from_previous():
-            self.refresh_after_action()
+            self.refresh_after_metadata_action()
 
     def copy_metadata(self):
         if self.session.copy_metadata():
-            self.refresh_after_action()
+            self.refresh_after_metadata_action()
 
     def paste_metadata(self):
         if self.session.paste_metadata():
-            self.refresh_after_action()
+            self.refresh_after_metadata_action()
 
     def jump_to_first_unreviewed(self):
         if self.session.jump_to_first_unreviewed():
@@ -422,3 +464,7 @@ class MainWindow(QMainWindow):
     def toggle_delete(self):
         self.session.toggle_delete()
         self.refresh_after_action()
+
+    def closeEvent(self, event):
+        self.save_window_geometry()
+        super().closeEvent(event)
