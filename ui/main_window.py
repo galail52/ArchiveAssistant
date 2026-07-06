@@ -302,6 +302,10 @@ class MainWindow(QMainWindow):
         if self.session.jump_to_next_restore():
             self.refresh_ui()
 
+    def jump_to_next_research(self):
+        if self.session.jump_to_next_research():
+            self.refresh_ui()
+
     def jump_to_next_back(self):
         if self.session.jump_to_next_back():
             self.refresh_ui()
@@ -372,6 +376,10 @@ class MainWindow(QMainWindow):
 
     def toggle_restore(self):
         self.session.toggle_restore()
+        self.refresh_after_action()
+
+    def toggle_research(self):
+        self.session.toggle_research()
         self.refresh_after_action()
 
     def toggle_delete(self):

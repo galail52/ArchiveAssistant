@@ -47,7 +47,6 @@ class ProjectController:
         )
 
         self.warn_if_project_unhealthy()
-
         self.window.refresh_ui()
 
     def warn_if_project_unhealthy(self):
@@ -89,6 +88,7 @@ class ProjectController:
                 f"Backs: {stats['backs']}\n"
                 f"Favorites: {stats['favorites']}\n"
                 f"Restore: {stats['restore']}\n"
+                f"Research: {stats['research']}\n"
                 f"Deletes: {stats['deletes']}"
             ),
         )

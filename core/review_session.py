@@ -122,16 +122,24 @@ class ReviewSession:
 
     def update_metadata(
         self,
-        notes: str,
         people: str,
+        event: str,
         location: str,
         date_taken: str,
+        keywords: str,
+        notes: str,
+        note_by: str,
+        confidence: int,
     ):
         self.metadata_state = MetadataState(
-            notes=notes,
             people=people,
+            event=event,
             location=location,
             date_taken=date_taken,
+            keywords=keywords,
+            notes=notes,
+            note_by=note_by,
+            confidence=confidence,
         )
         self.save_current_metadata()
 
@@ -148,6 +156,11 @@ class ReviewSession:
                 return True
 
         return False
+    
+    def jump_to_next_research(self):
+        return self.jump_to_next_matching(
+            lambda _file_path, state: state.needs_research
+        )
 
     def jump_to_next_unreviewed(self):
         return self.jump_to_next_matching(
@@ -260,6 +273,11 @@ class ReviewSession:
         self.review_state.toggle_restore()
         self.save_current_state()
 
+    def toggle_research(self):
+        self.take_snapshot()
+        self.review_state.toggle_research()
+        self.save_current_state()
+
     def toggle_delete(self):
         self.take_snapshot()
         self.review_state.toggle_delete()
@@ -299,6 +317,7 @@ class ReviewSession:
                 "backs": 0,
                 "favorites": 0,
                 "restore": 0,
+                "research": 0,
                 "deletes": 0,
             }
 

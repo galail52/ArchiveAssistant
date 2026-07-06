@@ -132,6 +132,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "nav.next_research",
+            "Next Research",
+            self.window.jump_to_next_research,
+            None,
+            "Navigation",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.next_back",
             "Next Back",
             self.window.jump_to_next_back,
@@ -406,6 +416,17 @@ class KeyboardManager:
             "Review",
             enabled=self.window.has_images,
             show_in_palette=False,
+        )
+        self.register(
+            "review.research",
+            "Research",
+            self.window.toggle_research,
+            "Y",
+            "Review",
+            enabled=self.window.has_images,
+            show_in_palette=False,
+            help_key="Y",
+            help_name="Research",
         )
         self.register(
             "review.delete",

@@ -1,5 +1,10 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QProgressBar, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QLabel,
+    QProgressBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class HeaderPanel(QWidget):
@@ -12,7 +17,10 @@ class HeaderPanel(QWidget):
         self.image_label = QLabel("Image 0 / 0")
         self.image_label.setAlignment(Qt.AlignCenter)
 
-        self.stats_label = QLabel("Reviewed: 0 | Backs: 0 | Favorites: 0 | Restore: 0 | Delete: 0")
+        self.stats_label = QLabel(
+            "Reviewed: 0 | Backs: 0 | Favorites: 0 | "
+            "Restore: 0 | Research: 0 | Delete: 0"
+        )
         self.stats_label.setAlignment(Qt.AlignCenter)
 
         self.progress = QProgressBar()
@@ -62,6 +70,7 @@ class HeaderPanel(QWidget):
                 "backs": 0,
                 "favorites": 0,
                 "restore": 0,
+                "research": 0,
                 "deletes": 0,
             }
 
@@ -70,6 +79,7 @@ class HeaderPanel(QWidget):
             f"Backs: {stats['backs']} | "
             f"Favorites: {stats['favorites']} | "
             f"Restore: {stats['restore']} | "
+            f"Research: {stats['research']} | "
             f"Delete: {stats['deletes']}"
         )
 
