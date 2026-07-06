@@ -1,135 +1,182 @@
-# Archive Assistant
+# ArchiveAssistant Roadmap
 
-## Vision
+> **Mission Statement**
+>
+> ArchiveAssistant exists to help humans produce the highest-quality historical archive with the fewest possible keystrokes.
+>
+> Every feature should improve speed, accuracy, consistency, and long-term preservation.
 
-Archive Assistant is a desktop application designed to digitize, organize,
-restore, annotate and preserve large family photograph archives.
+---
+
+# Vision
+
+ArchiveAssistant is a desktop application designed to digitize, organize, restore, annotate, and preserve large family photograph archives.
 
 The goal is not simply to review photographs.
 
-The goal is to create a permanent, searchable family archive that can be
-maintained for decades.
+The goal is to create a permanent, searchable family archive that can be maintained for generations.
+
+ArchiveAssistant is an archival workbench.
+
+It prepares photographs for long-term archival systems such as Immich while preserving historical context.
 
 ---
 
 # Workflow
 
+```
 Garage Boxes
-
-↓
-
+      │
+      ▼
 Scan Fronts
-
-↓
-
+      │
+      ▼
 Auto Crop
+      │
+      ▼
+ArchiveAssistant
 
-↓
+    │
+    ├── Review
+    ├── Scan Backs
+    ├── Pair Backs
+    ├── Metadata
+    ├── OCR
+    ├── Restoration Queue
+    └── Quality Assurance
 
-Review
-
-↓
-
-Scan Backs
-
-↓
-
-Pair Backs
-
-↓
-
-Metadata
-
-↓
-
-Restoration Queue
-
-↓
-
-Export
-
-↓
-
+      │
+      ▼
+Metadata Export
+      │
+      ▼
 Immich
+      │
+      ▼
+Long-Term Archive
+```
 
 ---
 
 # Current Milestone
 
-✔ Review UI
+## Foundation
 
-✔ Keyboard Shortcuts
+- ✅ Review Engine
+- ✅ Keyboard Workflow
+- ✅ Persistent Sessions
+- ✅ Database
+- ✅ Metadata Foundation
+- ✅ Undo
+- ✅ Project Health
+- ✅ Automatic Backups
 
-✔ Persistent Sessions
+## Active Development
 
-☐ Thumbnail Strip
-
-☐ Zoom & Pan
-
-☐ SQLite Metadata
-
-☐ OCR
-
-☐ Face Tagging
-
-☐ Export
+- ⏳ Metadata Workflow Polish
+- ⏳ Metadata Templates
+- ⏳ Copy / Paste Metadata
+- ⏳ Export Framework
 
 ---
 
 # Design Philosophy
 
-Review should be almost entirely keyboard driven.
+ArchiveAssistant should feel effortless.
 
-Mouse usage should be optional.
+The workflow should be almost entirely keyboard driven.
 
-Every action should autosave.
+Mouse usage should always be optional.
 
-No confirmation dialogs.
+The application should disappear behind the work.
 
-No manual saves.
+Core principles:
 
-No lost work.
+- Autosave everything.
+- No manual saves.
+- No unnecessary confirmation dialogs.
+- No lost work.
+- No repeated typing.
+- Fast enough that the user never thinks about waiting.
 
 ---
 
-# Future Modules
+# Major Modules
 
-Dashboard
+## Core
 
-Review
+- Dashboard
+- Review
+- Metadata
+- Export
+- Settings
 
-Back Pairing
+## Image Processing
 
-Metadata
+- Back Pairing
+- OCR
+- Restoration Queue
+- Duplicate Detection
 
-OCR
+## AI Assistance
 
-Restoration Queue
-
-Duplicate Detection
-
-Export
-
-Settings
+- Face Suggestions
+- OCR Assistance
+- Metadata Suggestions
+- Duplicate Suggestions
+- Scene Description
 
 ---
 
 # Stretch Goals
 
-AI handwriting transcription
+Potential future features include:
 
-AI face clustering
+- AI handwriting transcription
+- AI face clustering
+- Timeline view
+- Family tree integration
+- Historical location mapping
+- Immich synchronization
+- Cloud project synchronization
+- Automatic duplicate grouping
+- Video archive support
+- Document archive support
+- Audio archive support
 
-Timeline View
+Stretch goals intentionally remain flexible.
 
-Family Tree integration
+They are opportunities rather than commitments.
 
-Immich Sync
+---
 
-Cloud Backup
+# Things ArchiveAssistant Will Never Be
 
-Automatic duplicate grouping
+ArchiveAssistant is intentionally focused.
 
-Video archive support
+It is **not** intended to replace:
 
-Document archive support
+- Immich
+- Plex
+- Genealogy software
+- Photo editors
+- Restoration software
+- Backup software
+
+Excellent software already exists for those tasks.
+
+ArchiveAssistant prepares archives.
+
+Other software presents them.
+
+---
+
+# Long-Term Goal
+
+Imagine opening a garage full of forgotten family photographs.
+
+ArchiveAssistant should make preserving that history feel achievable.
+
+The software should never become the focus.
+
+The photographs—and the stories they contain—should remain the center of every design decision.
