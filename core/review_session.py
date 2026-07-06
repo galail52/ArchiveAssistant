@@ -143,6 +143,18 @@ class ReviewSession:
         )
         self.save_current_metadata()
 
+    def can_copy_metadata_from_previous(self):
+        return self.image_count > 0 and self.images.index > 0
+
+    def copy_metadata_from_previous(self):
+        if not self.can_copy_metadata_from_previous():
+            return False
+
+        previous_file = self.images.files[self.images.index - 1]
+        self.metadata_state = self.database.load_metadata(previous_file)
+        self.save_current_metadata()
+        return True
+
     def move(self, offset: int):
         self.navigate(lambda: self.navigator.move(offset))
 
@@ -156,7 +168,7 @@ class ReviewSession:
                 return True
 
         return False
-    
+
     def jump_to_next_research(self):
         return self.jump_to_next_matching(
             lambda _file_path, state: state.needs_research

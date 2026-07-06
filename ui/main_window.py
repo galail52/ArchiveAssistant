@@ -144,6 +144,9 @@ class MainWindow(QMainWindow):
         current_num, total = self.session.progress
         return current_num < total
 
+    def can_copy_metadata_from_previous(self):
+        return self.session.can_copy_metadata_from_previous()
+
     def refresh_ui(self):
         current = self.session.current_file
 
@@ -301,6 +304,10 @@ class MainWindow(QMainWindow):
 
         self.session.update_metadata(**values)
         self.refresh_ui()
+
+    def copy_metadata_from_previous(self):
+        if self.session.copy_metadata_from_previous():
+            self.refresh_after_action()
 
     def jump_to_first_unreviewed(self):
         if self.session.jump_to_first_unreviewed():

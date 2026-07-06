@@ -53,6 +53,17 @@ class KeyboardManager:
         )
 
         self.register(
+            "metadata.copy_previous",
+            "Copy Metadata From Previous",
+            self.window.copy_metadata_from_previous,
+            "C",
+            "Metadata",
+            enabled=self.window.can_copy_metadata_from_previous,
+            help_key="C",
+            help_name="Copy Previous Metadata",
+        )
+
+        self.register(
             "project.database_stats",
             "Database Stats",
             self.window.show_database_stats,
