@@ -155,15 +155,34 @@ class MetadataDialog(QDialog):
 
     def values(self):
         return {
-            "people": self.people.text().strip(),
-            "event": self.event.text().strip(),
-            "location": self.location.text().strip(),
-            "date_taken": self.date_taken.text().strip(),
-            "keywords": self.keywords.text().strip(),
-            "notes": self.notes.toPlainText().strip(),
-            "note_by": self.note_by.text().strip(),
+            "people": self.clean_list(self.people.text()),
+            "event": self.clean_text(self.event.text()),
+            "location": self.clean_text(self.location.text()),
+            "date_taken": self.clean_text(self.date_taken.text()),
+            "keywords": self.clean_list(self.keywords.text()),
+            "notes": self.clean_multiline(self.notes.toPlainText()),
+            "note_by": self.clean_text(self.note_by.text()),
             "confidence": self.confidence.value(),
         }
+
+    def clean_text(self, value):
+        return " ".join(value.strip().split())
+
+    def clean_list(self, value):
+        parts = [
+            self.clean_text(part)
+            for part in value.split(",")
+        ]
+
+        return ", ".join(part for part in parts if part)
+
+    def clean_multiline(self, value):
+        lines = [
+            self.clean_text(line)
+            for line in value.strip().splitlines()
+        ]
+
+        return "\n".join(line for line in lines if line)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
