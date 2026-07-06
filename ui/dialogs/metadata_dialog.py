@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from PySide6.QtCore import Qt
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
@@ -65,6 +66,11 @@ class MetadataDialog(QDialog):
     def __init__(self, metadata, parent=None):
         super().__init__(parent)
 
+        self.settings = QSettings(
+            "ArchiveAssistant",
+            "ArchiveAssistant",
+        )
+
         self.setWindowTitle("Edit Metadata")
         self.setModal(True)
         self.setMinimumWidth(580)
@@ -95,19 +101,37 @@ class MetadataDialog(QDialog):
         form.addRow("Note By:", self.note_by)
         form.addRow("Confidence:", self.confidence)
 
-        buttons = QDialogButtonBox(
+        self.buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         )
-        buttons.accepted.connect(self.try_accept)
-        buttons.rejected.connect(self.reject)
+        self.buttons.accepted.connect(self.save)
+        self.buttons.rejected.connect(self.reject)
 
         layout = QVBoxLayout()
         layout.addLayout(form)
-        layout.addWidget(buttons)
+        layout.addWidget(self.buttons)
 
         self.setLayout(layout)
 
-    def try_accept(self):
+        self.restore_dialog_geometry()
+        self.original_values = self.values()
+
+        self.people.setFocus()
+        self.people.selectAll()
+
+    def restore_dialog_geometry(self):
+        geometry = self.settings.value("metadata_dialog/geometry")
+
+        if geometry is not None:
+            self.restoreGeometry(geometry)
+
+    def save_dialog_geometry(self):
+        self.settings.setValue(
+            "metadata_dialog/geometry",
+            self.saveGeometry(),
+        )
+
+    def save(self):
         if not self.valid_date_taken():
             QMessageBox.warning(
                 self,
@@ -123,7 +147,27 @@ class MetadataDialog(QDialog):
             self.date_taken.selectAll()
             return
 
+        self.save_dialog_geometry()
         self.accept()
+
+    def reject(self):
+        if self.is_dirty():
+            result = QMessageBox.question(
+                self,
+                "Discard Metadata Changes?",
+                "Discard metadata changes?",
+                QMessageBox.Discard | QMessageBox.Cancel,
+                QMessageBox.Cancel,
+            )
+
+            if result != QMessageBox.Discard:
+                return
+
+        self.save_dialog_geometry()
+        super().reject()
+
+    def is_dirty(self):
+        return self.values() != self.original_values
 
     def valid_date_taken(self):
         value = self.date_taken.text().strip()
@@ -188,6 +232,19 @@ class MetadataDialog(QDialog):
         if event.key() == Qt.Key_Escape:
             self.reject()
             return
+
+        if event.key() == Qt.Key_S and event.modifiers() & Qt.ControlModifier:
+            self.save()
+            return
+
+        if event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            if event.modifiers() & Qt.ControlModifier:
+                self.save()
+                return
+
+            if self.focusWidget() is not self.notes:
+                self.save()
+                return
 
         super().keyPressEvent(event)
 

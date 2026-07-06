@@ -37,6 +37,8 @@ class MainWindow(QMainWindow):
             "ArchiveAssistant",
         )
 
+        self.metadata_dialog_open = False
+
         self.session = ReviewSession()
         self.command_registry = CommandRegistry()
         self.project_controller = ProjectController(self)
@@ -280,10 +282,19 @@ class MainWindow(QMainWindow):
         if not self.has_images():
             return
 
-        values = MetadataDialog.get_metadata(
-            self.session.metadata,
-            self,
-        )
+        if self.metadata_dialog_open:
+            return
+
+        self.metadata_dialog_open = True
+
+        try:
+            values = MetadataDialog.get_metadata(
+                self.session.metadata,
+                self,
+            )
+        finally:
+            self.metadata_dialog_open = False
+            self.image_panel.setFocus()
 
         if values is None:
             return

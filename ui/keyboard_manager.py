@@ -45,10 +45,11 @@ class KeyboardManager:
             "metadata.edit",
             "Edit Metadata",
             self.window.open_metadata_editor,
-            None,
+            "M",
             "Metadata",
             enabled=self.window.has_images,
-            show_in_help=False,
+            help_key="M",
+            help_name="Metadata",
         )
 
         self.register(
@@ -172,6 +173,7 @@ class KeyboardManager:
             help_key="← / →",
             help_name="Prev / Next",
         )
+
         self.register(
             "nav.next",
             "Next Image",
@@ -182,6 +184,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "nav.next.space",
             "Next Image",
@@ -192,6 +195,7 @@ class KeyboardManager:
             show_in_palette=False,
             help_name="Next",
         )
+
         self.register(
             "nav.back10",
             "Jump Back 10",
@@ -203,6 +207,7 @@ class KeyboardManager:
             help_key="PgUp/Dn",
             help_name="Jump 10",
         )
+
         self.register(
             "nav.forward10",
             "Jump Forward 10",
@@ -213,6 +218,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "nav.back50",
             "Jump Back 50",
@@ -224,6 +230,7 @@ class KeyboardManager:
             help_key="Ctrl+←/→",
             help_name="Jump 50",
         )
+
         self.register(
             "nav.forward50",
             "Jump Forward 50",
@@ -234,6 +241,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "nav.first",
             "First Image",
@@ -245,6 +253,7 @@ class KeyboardManager:
             help_key="Home/End",
             help_name="First / Last",
         )
+
         self.register(
             "nav.last",
             "Last Image",
@@ -265,6 +274,7 @@ class KeyboardManager:
             enabled=self.window.has_images,
             show_in_palette=False,
         )
+
         self.register(
             "view.zoom100",
             "100%",
@@ -276,6 +286,7 @@ class KeyboardManager:
             help_key="2 / 3 / 4",
             help_name="100 / 200 / 400",
         )
+
         self.register(
             "view.zoom200",
             "200%",
@@ -286,6 +297,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "view.zoom400",
             "400%",
@@ -296,6 +308,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "view.zoom_in",
             "Zoom In",
@@ -307,6 +320,7 @@ class KeyboardManager:
             help_key="+ / -",
             help_name="Zoom In / Out",
         )
+
         self.register(
             "view.zoom_in_equals",
             "Zoom In",
@@ -317,6 +331,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "view.zoom_out",
             "Zoom Out",
@@ -327,6 +342,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "view.pan_left",
             "Pan Left",
@@ -338,6 +354,7 @@ class KeyboardManager:
             help_key="Shift+Arr",
             help_name="Pan",
         )
+
         self.register(
             "view.pan_right",
             "Pan Right",
@@ -348,6 +365,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "view.pan_up",
             "Pan Up",
@@ -358,6 +376,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "view.pan_down",
             "Pan Down",
@@ -368,6 +387,7 @@ class KeyboardManager:
             show_in_help=False,
             show_in_palette=False,
         )
+
         self.register(
             "view.rotate_left",
             "Rotate Left",
@@ -379,6 +399,7 @@ class KeyboardManager:
             help_key="A / D",
             help_name="Rotate",
         )
+
         self.register(
             "view.rotate_right",
             "Rotate Right",
@@ -399,6 +420,7 @@ class KeyboardManager:
             enabled=self.window.has_images,
             show_in_palette=False,
         )
+
         self.register(
             "review.favorite",
             "Favorite",
@@ -408,6 +430,7 @@ class KeyboardManager:
             enabled=self.window.has_images,
             show_in_palette=False,
         )
+
         self.register(
             "review.restore",
             "Restore",
@@ -417,6 +440,7 @@ class KeyboardManager:
             enabled=self.window.has_images,
             show_in_palette=False,
         )
+
         self.register(
             "review.research",
             "Research",
@@ -428,6 +452,7 @@ class KeyboardManager:
             help_key="Y",
             help_name="Research",
         )
+
         self.register(
             "review.delete",
             "Delete",
