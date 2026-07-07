@@ -155,6 +155,7 @@ They only affect presentation.
 | Shortcut | Action |
 |----------|--------|
 | G | Command Palette |
+| F1 | Keyboard Shortcuts |
 
 The Command Palette is intended for uncommon operations.
 

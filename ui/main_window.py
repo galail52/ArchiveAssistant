@@ -17,6 +17,7 @@ from ui.dialogs.collection_health_dialog import CollectionHealthDialog
 from ui.dialogs.ai_status_dialog import AIStatusDialog
 from ui.dialogs.command_palette import CommandPalette
 from ui.dialogs.find_filename_dialog import FindFilenameDialog
+from ui.dialogs.keyboard_shortcuts_dialog import KeyboardShortcutsDialog
 from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.dialogs.metadata_dialog import MetadataDialog
 from ui.dialogs.metadata_field_dialog import MetadataFieldDialog
@@ -64,7 +65,6 @@ class MainWindow(QMainWindow):
         self.keyboard_manager.register_shortcuts()
 
         self.side_panel = SidePanel(
-            self.keyboard_manager.help_text(),
             review_actions={
                 "back": self.toggle_back,
                 "favorite": self.toggle_favorite,
@@ -167,6 +167,15 @@ class MainWindow(QMainWindow):
 
         try:
             CollectionHealthDialog.show_report(report, self)
+        finally:
+            self.focus_image_viewer()
+
+    def show_keyboard_shortcuts(self):
+        try:
+            KeyboardShortcutsDialog.show_help(
+                self.keyboard_manager.help_text(),
+                self,
+            )
         finally:
             self.focus_image_viewer()
 

@@ -30,6 +30,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "app.keyboard_shortcuts",
+            "Keyboard Shortcuts",
+            self.window.show_keyboard_shortcuts,
+            "F1",
+            "Application",
+            help_key="F1",
+            help_name="Keyboard Shortcuts",
+        )
+
+        self.register(
             "review.undo",
             "Undo Review Change",
             self.window.undo_review_change,

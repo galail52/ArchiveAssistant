@@ -1,9 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QLabel,
-    QSizePolicy,
     QGridLayout,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -14,10 +12,9 @@ from ui.widgets.status_card import StatusCard
 
 
 class SidePanel(QWidget):
-    def __init__(self, keyboard_help="", review_actions=None):
+    def __init__(self, review_actions=None):
         super().__init__()
 
-        self.keyboard_help = keyboard_help
         self.review_actions = review_actions or {}
 
         self.zoom = StatusCard(" Zoom")
@@ -105,35 +102,7 @@ class SidePanel(QWidget):
         """)
         layout.addWidget(self.relationship_summary)
 
-        keyboard_title = QLabel("Keyboard")
-        keyboard_title.setAlignment(Qt.AlignCenter)
-        keyboard_title.setStyleSheet("""
-            font-size:13pt;
-            font-weight:bold;
-            margin-top:5px;
-        """)
-        layout.addWidget(keyboard_title)
-
-        keyboard = QLabel(self.keyboard_help)
-        keyboard.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        keyboard.setStyleSheet("""
-            font-family:Consolas, monospace;
-            font-size:9.5pt;
-            line-height:100%;
-            color:#d0d0d0;
-        """)
-
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QScrollArea.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setWidget(keyboard)
-        scroll.setSizePolicy(
-            QSizePolicy.Expanding,
-            QSizePolicy.Expanding,
-        )
-
-        layout.addWidget(scroll, 1)
+        layout.addStretch(1)
 
         self.setLayout(layout)
 
