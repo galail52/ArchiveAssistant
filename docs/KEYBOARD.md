@@ -111,6 +111,7 @@ Additional metadata tools are available through the Command Palette:
 - Rename Metadata Template
 - Delete Metadata Template
 - Export Preview / Dry Run
+- Collection Health
 
 ---
 

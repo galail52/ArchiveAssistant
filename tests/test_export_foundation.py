@@ -69,6 +69,7 @@ class ExportFoundationTests(unittest.TestCase):
                 payload["records"][0]["metadata"]["people"],
                 "Ada Lovelace",
             )
+            self.assertEqual(payload["records"][0]["people"], ["Ada Lovelace"])
             self.assertEqual(
                 payload["records"][1]["review"]["delete"],
                 True,
@@ -97,6 +98,7 @@ class ExportFoundationTests(unittest.TestCase):
 
             self.assertEqual(rows[0]["filename"], "001.jpg")
             self.assertEqual(rows[0]["people"], "Ada Lovelace")
+            self.assertEqual(rows[0]["people_values"], "Ada Lovelace")
             self.assertEqual(rows[0]["favorite"], "1")
             self.assertEqual(rows[1]["needs_research"], "1")
             self.assertEqual(rows[1]["delete"], "1")

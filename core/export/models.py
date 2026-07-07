@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
+from core.metadata import parse_people
 from core.metadata_state import MetadataState
 from core.review_state import ReviewState
 
@@ -28,13 +29,16 @@ class ExportRecord:
     filename: str
     metadata: MetadataState
     review_state: ReviewState
+    reviewed: bool = False
 
     def as_dict(self):
         return {
             "file_path": str(self.file_path),
             "filename": self.filename,
             "metadata": self.metadata.as_dict(),
+            "people": parse_people(self.metadata.people),
             "review": self.review_state.as_dict(),
+            "reviewed": self.reviewed,
         }
 
 

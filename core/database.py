@@ -412,7 +412,8 @@ class ArchiveDatabase:
                 keywords,
                 notes,
                 note_by,
-                confidence
+                confidence,
+                reviewed
             FROM photos
             WHERE project_path = ?
             ORDER BY file_path
@@ -433,6 +434,7 @@ class ArchiveDatabase:
                     needs_research=bool(row["needs_research"]),
                     delete=bool(row["delete_flag"]),
                 ),
+                reviewed=bool(row["reviewed"]),
             )
             for row in rows
         ]

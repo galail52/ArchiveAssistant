@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
 from core.command_registry import CommandRegistry
 from core.metadata_state import METADATA_FIELDS
 from core.review_session import ReviewSession
+from ui.dialogs.collection_health_dialog import CollectionHealthDialog
 from ui.dialogs.command_palette import CommandPalette
 from ui.dialogs.find_filename_dialog import FindFilenameDialog
 from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
@@ -150,6 +151,18 @@ class MainWindow(QMainWindow):
 
     def show_project_health(self):
         self.project_controller.show_project_health()
+
+    def show_collection_health(self):
+        report = self.session.build_health_report()
+        self.focus_image_viewer()
+
+        if report is None:
+            return
+
+        try:
+            CollectionHealthDialog.show_report(report, self)
+        finally:
+            self.focus_image_viewer()
 
     def show_export_preview(self):
         result = self.session.export_preview()

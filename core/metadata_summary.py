@@ -1,3 +1,4 @@
+from core.metadata import parse_people
 from core.metadata_state import MetadataState
 
 
@@ -29,14 +30,20 @@ def metadata_summary_lines(metadata: MetadataState | None):
 
     rows = []
     keywords = split_list_value(metadata.keywords)
+    people = parse_people(metadata.people)
 
     fields = [
-        ("People", metadata.people, SUMMARY_LIMITS["people"]),
         ("Event", metadata.event, SUMMARY_LIMITS["event"]),
         ("Location", metadata.location, SUMMARY_LIMITS["location"]),
         ("Date", metadata.date_taken, SUMMARY_LIMITS["date_taken"]),
         ("Note By", metadata.note_by, SUMMARY_LIMITS["note_by"]),
     ]
+
+    if people:
+        people_value = " ".join(f"[{person}]" for person in people)
+        rows.append(
+            f"People: {truncate_summary_value(people_value, SUMMARY_LIMITS['people'])}"
+        )
 
     for label, value, limit in fields:
         display_value = truncate_summary_value(value, limit)

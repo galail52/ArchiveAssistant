@@ -4,7 +4,9 @@ from core.database import ArchiveDatabase
 from core.export import ExportFormat
 from core.export import ExportJob
 from core.export import ExportManager
+from core.health import HealthManager
 from core.image_manager import ImageManager
+from core.metadata import parse_people
 from core.metadata_patch import MetadataPatch
 from core.metadata_state import RECENT_METADATA_FIELDS
 from core.metadata_state import MetadataState
@@ -32,6 +34,7 @@ class ReviewSession:
         )
         self.template_manager = MetadataTemplateManager(self.database)
         self.export_manager = ExportManager()
+        self.health_manager = HealthManager(self.database)
 
     @property
     def state(self):
@@ -235,13 +238,27 @@ class ReviewSession:
         if self.images.project_path is None:
             return {field: [] for field in RECENT_METADATA_FIELDS}
 
-        return {
+        values = {
             field: self.database.recent_metadata_values(
                 self.images.project_path,
                 field,
             )
             for field in RECENT_METADATA_FIELDS
         }
+
+        people = []
+        seen = set()
+
+        for value in values["people"]:
+            for person in parse_people(value):
+                key = person.lower()
+
+                if key not in seen:
+                    seen.add(key)
+                    people.append(person)
+
+        values["people"] = people[:20]
+        return values
 
     def metadata_templates(self):
         return self.template_manager.templates()
@@ -304,6 +321,12 @@ class ReviewSession:
             self.images.project_path / "archiveassistant_export_preview.json",
             dry_run=True,
         )
+
+    def build_health_report(self):
+        if self.images.project_path is None:
+            return None
+
+        return self.health_manager.build_report(self.images.project_path)
 
     def move(self, offset: int):
         return self.navigate(lambda: self.navigator.move(offset))

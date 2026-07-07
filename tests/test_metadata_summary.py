@@ -23,7 +23,7 @@ class MetadataSummaryTests(unittest.TestCase):
 
         rows = metadata_summary_lines(metadata)
 
-        self.assertIn("People: Ada Lovelace, Charles Babbage", rows)
+        self.assertIn("People: [Ada Lovelace] [Charles Babbage]", rows)
         self.assertIn("Location: Murray, Utah", rows)
         self.assertIn("Date: 1958-07", rows)
         self.assertIn("Keywords: 3", rows)
@@ -38,7 +38,10 @@ class MetadataSummaryTests(unittest.TestCase):
 
     def test_summary_truncates_long_people_values(self):
         metadata = MetadataState(
-            people="Ada Lovelace, Charles Babbage, Grace Hopper, Katherine Johnson",
+            people=(
+                "Ada Lovelace, Charles Babbage, Grace Hopper, "
+                "Katherine Johnson"
+            ),
             event="Reunion",
             location="Murray, Utah",
             date_taken="1958",

@@ -1,3 +1,4 @@
+from core.metadata import parse_people
 from core.export.models import ExportWarning
 
 
@@ -8,7 +9,7 @@ def export_warnings(records):
         metadata = record.metadata
         state = record.review_state
 
-        if not metadata.people.strip():
+        if not parse_people(metadata.people):
             warnings.append(
                 ExportWarning(
                     record.file_path,

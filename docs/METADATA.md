@@ -257,6 +257,16 @@ People should represent individuals visible within the photograph.
 
 Names should remain consistent throughout the archive.
 
+People are entered as comma-separated free text.
+
+Example:
+
+```
+John Smith, Mary Smith, Bill
+```
+
+ArchiveAssistant parses that text into individual people for summaries, health reporting, autocomplete, and export support without requiring manual tag creation.
+
 Future versions may support:
 
 - autocomplete

@@ -175,6 +175,16 @@ class KeyboardManager:
         )
 
         self.register(
+            "health.collection",
+            "Collection Health",
+            self.window.show_collection_health,
+            None,
+            "Health",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.goto_image",
             "Go To Image",
             self.window.open_go_to_image,
