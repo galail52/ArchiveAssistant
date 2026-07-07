@@ -16,6 +16,7 @@ from core.review_session import ReviewSession
 from ui.dialogs.collection_health_dialog import CollectionHealthDialog
 from ui.dialogs.ai_status_dialog import AIStatusDialog
 from ui.dialogs.command_palette import CommandPalette
+from ui.dialogs.dual_session_dialog import DualSessionDialog
 from ui.dialogs.find_filename_dialog import FindFilenameDialog
 from ui.dialogs.keyboard_shortcuts_dialog import KeyboardShortcutsDialog
 from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
@@ -178,6 +179,22 @@ class MainWindow(QMainWindow):
             )
         finally:
             self.focus_image_viewer()
+
+    def open_dual_session_review(self):
+        initial_left_folder = self.session.images.project_path
+        initial_left_index = None
+
+        if self.session.image_count > 0:
+            initial_left_index = self.session.images.index
+
+        try:
+            DualSessionDialog.show_dialog(
+                self,
+                initial_left_folder,
+                initial_left_index,
+            )
+        finally:
+            self.refresh_after_action()
 
     def show_ai_status(self):
         try:

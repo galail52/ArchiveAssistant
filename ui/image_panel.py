@@ -37,6 +37,16 @@ class ImagePanel(QWidget):
         self.update()
         return True
 
+    def clear_image(self):
+        if self.current_filename is None and self.current_pixmap is None:
+            return False
+
+        self.current_filename = None
+        self.current_pixmap = None
+        self.clear_transform_cache()
+        self.update()
+        return True
+
     def clear_transform_cache(self):
         self._transformed_pixmap = None
         self._transform_cache_key = None

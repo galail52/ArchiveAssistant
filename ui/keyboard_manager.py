@@ -339,6 +339,15 @@ class KeyboardManager:
         )
 
         self.register(
+            "relationship.dual_session",
+            "Dual Session Review",
+            self.window.open_dual_session_review,
+            None,
+            "Relationships",
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.goto_image",
             "Go To Image",
             self.window.open_go_to_image,

@@ -127,6 +127,7 @@ Additional metadata tools are available through the Command Palette:
 - Pair Front / Back
 - View Related Images
 - Remove Relationship
+- Dual Session Review
 
 ---
 
