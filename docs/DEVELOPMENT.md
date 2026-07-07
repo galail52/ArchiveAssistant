@@ -178,6 +178,8 @@ ViewState
 
 Avoid classes that manage unrelated systems.
 
+For the current reusable subsystem shape, see `docs/patterns.md`.
+
 ---
 
 # Keyboard First

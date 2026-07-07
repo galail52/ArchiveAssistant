@@ -182,6 +182,7 @@ Future development is primarily additive.
 Project documentation can be found in the `docs` directory.
 
 - Architecture
+- Architecture Patterns
 - Development Guide
 - Keyboard Workflow
 - Metadata Philosophy

@@ -298,6 +298,8 @@ ReviewSession
 
 New systems should extend ReviewSession rather than replace it.
 
+For the standard subsystem pattern used by Export, Health, Smart Filters, OCR, and Relationships, see `docs/patterns.md`.
+
 ---
 
 # Architectural Rule
