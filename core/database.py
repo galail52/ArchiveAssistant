@@ -6,6 +6,8 @@ from core.export.models import ExportRecord
 from core.metadata_state import RECENT_METADATA_FIELDS
 from core.metadata_state import MetadataState
 from core.metadata_template_manager import MetadataTemplate
+from core.relationships import Relationship
+from core.relationships import RelationshipType
 from core.review_state import ReviewState
 
 
@@ -114,6 +116,25 @@ class ArchiveDatabase:
                 field_name TEXT NOT NULL,
                 value TEXT NOT NULL,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS relationships (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_image_id TEXT NOT NULL,
+                target_image_id TEXT NOT NULL,
+                relationship_type TEXT NOT NULL,
+                notes TEXT DEFAULT '',
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+
+                UNIQUE(
+                    source_image_id,
+                    target_image_id,
+                    relationship_type
+                )
             )
             """
         )
@@ -392,6 +413,97 @@ class ArchiveDatabase:
         ).fetchall()
 
         return [Path(row["file_path"]) for row in rows]
+
+    def create_relationship(
+        self,
+        source_image_id: str,
+        target_image_id: str,
+        relationship_type: RelationshipType,
+        notes="",
+    ):
+        cursor = self.connection.execute(
+            """
+            INSERT INTO relationships (
+                source_image_id,
+                target_image_id,
+                relationship_type,
+                notes
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (
+                source_image_id,
+                target_image_id,
+                relationship_type.value,
+                notes,
+            ),
+        )
+
+        self.connection.commit()
+
+        return self.get_relationship(cursor.lastrowid)
+
+    def get_relationship(self, relationship_id: int):
+        row = self.connection.execute(
+            """
+            SELECT *
+            FROM relationships
+            WHERE id = ?
+            """,
+            (relationship_id,),
+        ).fetchone()
+
+        if row is None:
+            return None
+
+        return self.relationship_from_row(row)
+
+    def remove_relationship(self, relationship_id: int):
+        cursor = self.connection.execute(
+            """
+            DELETE FROM relationships
+            WHERE id = ?
+            """,
+            (relationship_id,),
+        )
+
+        self.connection.commit()
+        return cursor.rowcount > 0
+
+    def relationships_for_image(self, image_id: str):
+        rows = self.connection.execute(
+            """
+            SELECT *
+            FROM relationships
+            WHERE source_image_id = ?
+               OR target_image_id = ?
+            ORDER BY created_at, id
+            """,
+            (image_id, image_id),
+        ).fetchall()
+
+        return [self.relationship_from_row(row) for row in rows]
+
+    def all_relationships(self):
+        rows = self.connection.execute(
+            """
+            SELECT *
+            FROM relationships
+            ORDER BY created_at, id
+            """
+        ).fetchall()
+
+        return [self.relationship_from_row(row) for row in rows]
+
+    def relationship_from_row(self, row):
+        return Relationship(
+            relationship_id=row["id"],
+            source_image_id=row["source_image_id"],
+            target_image_id=row["target_image_id"],
+            relationship_type=RelationshipType(row["relationship_type"]),
+            created_at=row["created_at"],
+            notes=row["notes"] or "",
+        )
 
     def export_records(self, project_path: Path):
         rows = self.connection.execute(

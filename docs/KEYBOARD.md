@@ -116,6 +116,9 @@ Additional metadata tools are available through the Command Palette:
 - OCR Status
 - Queue Current for OCR
 - Queue Missing OCR
+- Pair Front / Back
+- View Related Images
+- Remove Relationship
 
 ---
 

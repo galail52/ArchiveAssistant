@@ -20,6 +20,8 @@ from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.dialogs.metadata_dialog import MetadataDialog
 from ui.dialogs.metadata_field_dialog import MetadataFieldDialog
 from ui.dialogs.ocr_status_dialog import OCRStatusDialog
+from ui.dialogs.relationship_dialog import ImageSelectionDialog
+from ui.dialogs.relationship_dialog import RelationshipSelectionDialog
 from ui.dialogs.smart_filter_dialog import SmartFilterDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
@@ -221,6 +223,90 @@ class MainWindow(QMainWindow):
         self.keyboard_manager.update_enabled_states()
         self.focus_image_viewer()
 
+    def pair_front_back(self):
+        if not self.has_images():
+            return
+
+        try:
+            target_image_id = ImageSelectionDialog.get_image_id(
+                "Pair Front / Back",
+                self.session.images.files,
+                self.session.current_file,
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
+
+        if target_image_id is None:
+            return
+
+        relationship = self.session.create_current_relationship(
+            target_image_id,
+        )
+
+        if relationship is None:
+            self.show_navigation_message("Could not create relationship")
+        else:
+            self.show_navigation_message("Front / Back relationship saved")
+
+        self.refresh_after_action()
+
+    def view_related_images(self):
+        relationships = self.session.relationship_records_for_current()
+
+        if not relationships:
+            self.show_navigation_message("No related images")
+            self.focus_image_viewer()
+            return
+
+        try:
+            related_image_id = RelationshipSelectionDialog.get_related_image_id(
+                "View Related Images",
+                relationships,
+                self.session.current_file,
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
+
+        if related_image_id is None:
+            return
+
+        if self.session.jump_to_related_image(related_image_id):
+            self.refresh_ui()
+            return
+
+        self.show_navigation_message("Related image is not in this project")
+        self.focus_image_viewer()
+
+    def remove_relationship(self):
+        relationships = self.session.relationship_records_for_current()
+
+        if not relationships:
+            self.show_navigation_message("No relationships to remove")
+            self.focus_image_viewer()
+            return
+
+        try:
+            relationship_id = RelationshipSelectionDialog.get_relationship_id(
+                "Remove Relationship",
+                relationships,
+                self.session.current_file,
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
+
+        if relationship_id is None:
+            return
+
+        if self.session.remove_relationship(relationship_id):
+            self.show_navigation_message("Relationship removed")
+        else:
+            self.show_navigation_message("Relationship was not removed")
+
+        self.refresh_after_action()
+
     def show_export_preview(self):
         result = self.session.export_preview()
         self.focus_image_viewer()
@@ -307,6 +393,8 @@ class MainWindow(QMainWindow):
             **self.session.state.as_dict(),
             view_state=self.session.view_state,
             metadata=self.session.metadata,
+            relationships=self.session.relationship_records_for_current(),
+            current_image_id=self.session.current_file,
         )
 
     def update_buttons(self):

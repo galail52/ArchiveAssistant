@@ -13,6 +13,8 @@ from core.metadata_state import MetadataState
 from core.metadata_template_manager import MetadataTemplateManager
 from core.navigator import Navigator
 from core.ocr import OCRManager
+from core.relationships import RelationshipManager
+from core.relationships import RelationshipType
 from core.review_snapshot import ReviewSnapshot
 from core.review_state import ReviewState
 from core.search import SmartFilterManager
@@ -39,6 +41,7 @@ class ReviewSession:
         self.health_manager = HealthManager(self.database)
         self.smart_filter_manager = SmartFilterManager(self.database)
         self.ocr_manager = OCRManager()
+        self.relationship_manager = RelationshipManager(self.database)
 
     @property
     def state(self):
@@ -380,6 +383,77 @@ class ReviewSession:
             self.export_records(),
             source_type,
         )
+
+    def create_relationship(
+        self,
+        source_image_id,
+        target_image_id,
+        relationship_type=RelationshipType.FRONT_BACK,
+        notes="",
+    ):
+        return self.relationship_manager.create_relationship(
+            source_image_id,
+            target_image_id,
+            relationship_type,
+            notes,
+        )
+
+    def create_current_relationship(
+        self,
+        target_image_id,
+        relationship_type=RelationshipType.FRONT_BACK,
+        notes="",
+    ):
+        if self.current_file is None:
+            return None
+
+        return self.create_relationship(
+            self.current_file,
+            target_image_id,
+            relationship_type,
+            notes,
+        )
+
+    def remove_relationship(self, relationship_id):
+        return self.relationship_manager.remove_relationship(relationship_id)
+
+    def related_images(self, image_id=None):
+        if image_id is None:
+            image_id = self.current_file
+
+        if image_id is None:
+            return []
+
+        return self.relationship_manager.related_images(image_id)
+
+    def relationships_for_image(self, image_id=None):
+        if image_id is None:
+            image_id = self.current_file
+
+        if image_id is None:
+            return []
+
+        return self.relationship_manager.relationships_for_image(image_id)
+
+    def has_relationship(self, image_id=None):
+        if image_id is None:
+            image_id = self.current_file
+
+        if image_id is None:
+            return False
+
+        return self.relationship_manager.has_relationship(image_id)
+
+    def relationship_records_for_current(self):
+        return self.relationships_for_image()
+
+    def jump_to_related_image(self, image_id):
+        target = Path(image_id)
+
+        if target not in self.images.files:
+            return False
+
+        return self.jump_to(self.images.files.index(target))
 
     def move(self, offset: int):
         return self.navigate(lambda: self.navigator.move(offset))

@@ -224,6 +224,36 @@ class KeyboardManager:
         )
 
         self.register(
+            "relationship.pair_front_back",
+            "Pair Front / Back",
+            self.window.pair_front_back,
+            None,
+            "Relationships",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "relationship.view_related",
+            "View Related Images",
+            self.window.view_related_images,
+            None,
+            "Relationships",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "relationship.remove",
+            "Remove Relationship",
+            self.window.remove_relationship,
+            None,
+            "Relationships",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.goto_image",
             "Go To Image",
             self.window.open_go_to_image,

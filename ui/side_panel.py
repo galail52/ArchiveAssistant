@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from pathlib import Path
 
 from core.metadata_summary import metadata_summary_lines
 from ui.widgets.status_card import StatusCard
@@ -31,6 +32,9 @@ class SidePanel(QWidget):
         self.metadata_summary = QLabel("No metadata")
         self.metadata_summary.setWordWrap(True)
         self.metadata_summary.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.relationship_summary = QLabel("No relationships")
+        self.relationship_summary.setWordWrap(True)
+        self.relationship_summary.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
         self.build_ui()
         self.connect_review_actions()
@@ -79,6 +83,25 @@ class SidePanel(QWidget):
             padding:8px;
         """)
         layout.addWidget(self.metadata_summary)
+
+        relationship_title = QLabel("Relationships")
+        relationship_title.setAlignment(Qt.AlignCenter)
+        relationship_title.setStyleSheet("""
+            font-size:13pt;
+            font-weight:bold;
+            margin-top:5px;
+        """)
+        layout.addWidget(relationship_title)
+
+        self.relationship_summary.setStyleSheet("""
+            font-size:10pt;
+            color:#d0d0d0;
+            background-color:#303030;
+            border:1px solid #4a4a4a;
+            border-radius:8px;
+            padding:8px;
+        """)
+        layout.addWidget(self.relationship_summary)
 
         keyboard_title = QLabel("Keyboard")
         keyboard_title.setAlignment(Qt.AlignCenter)
@@ -161,6 +184,8 @@ class SidePanel(QWidget):
         delete=False,
         view_state=None,
         metadata=None,
+        relationships=None,
+        current_image_id=None,
     ):
         if view_state is None:
             zoom_label = "Fit"
@@ -189,7 +214,28 @@ class SidePanel(QWidget):
         self.delete.set_value("YES" if delete else "NO", delete, "#ff6666")
 
         self.update_metadata_summary(metadata)
+        self.update_relationship_summary(relationships, current_image_id)
 
     def update_metadata_summary(self, metadata=None):
         rows = metadata_summary_lines(metadata)
         self.metadata_summary.setText("\n".join(rows) if rows else "No metadata")
+
+    def update_relationship_summary(self, relationships=None, current_image_id=None):
+        rows = []
+        current_image_id = str(current_image_id or "")
+
+        for relationship in relationships or []:
+            related = relationship.target_image_id
+
+            if relationship.target_image_id == current_image_id:
+                related = relationship.source_image_id
+
+            relationship_label = relationship.relationship_type.value.replace(
+                "_",
+                " ",
+            ).title()
+            rows.append(f"{relationship_label}: {Path(related).name}")
+
+        self.relationship_summary.setText(
+            "\n".join(rows) if rows else "No relationships"
+        )
