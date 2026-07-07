@@ -68,6 +68,7 @@ Examples:
 - `OCRManager` coordinates OCR queue planning and engine execution.
 - `RelationshipManager` creates, removes, and queries image relationships.
 - `SimilarityManager` coordinates image fingerprinting, comparison, and grouping.
+- `AIManager` selects local AI providers and returns structured responses.
 
 ---
 
@@ -99,6 +100,9 @@ Examples:
 - `ImageFingerprint`
 - `SimilarityMatch`
 - `SimilarityGroup`
+- `AIRequest`
+- `AIResponse`
+- `AISettings`
 
 ---
 
@@ -243,6 +247,8 @@ Examples:
 - Export Preview / Dry Run
 - Collection Health
 - Smart Filters
+- AI Status
+- Test AI Connection
 - OCR Status
 - Queue Current for OCR
 - Run OCR on Current Image
@@ -348,6 +354,20 @@ OCR provides a non-destructive extraction service.
 Tesseract is optional. If it is not installed, OCR reports the unavailable engine state without crashing.
 
 OCR does not write metadata automatically.
+
+## AI
+
+AI provides a local-provider foundation for future human-approved suggestions.
+
+- `AIManager` selects providers and coordinates status checks, model listing, and test prompts.
+- `AIProvider` isolates provider-specific HTTP behavior.
+- `AIRequest` models prompt input.
+- `AIResponse` models structured success or failure.
+- `AISettings` models provider type, endpoint, default model, and enabled state.
+
+Ollama and Open WebUI are the first provider adapters.
+
+AI does not write metadata automatically.
 
 ## Relationships
 

@@ -113,6 +113,9 @@ Additional metadata tools are available through the Command Palette:
 - Export Preview / Dry Run
 - Collection Health
 - Smart Filters
+- AI Status
+- Test AI Connection
+- AI Test Prompt
 - OCR Status
 - Queue Current for OCR
 - Queue Missing OCR

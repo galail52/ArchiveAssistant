@@ -195,6 +195,33 @@ class KeyboardManager:
         )
 
         self.register(
+            "ai.status",
+            "AI Status",
+            self.window.show_ai_status,
+            None,
+            "AI",
+            show_in_help=False,
+        )
+
+        self.register(
+            "ai.test_connection",
+            "Test AI Connection",
+            self.window.test_ai_connection,
+            None,
+            "AI",
+            show_in_help=False,
+        )
+
+        self.register(
+            "ai.test_prompt",
+            "AI Test Prompt",
+            self.window.send_ai_test_prompt,
+            None,
+            "AI",
+            show_in_help=False,
+        )
+
+        self.register(
             "ocr.status",
             "OCR Status",
             self.window.show_ocr_status,

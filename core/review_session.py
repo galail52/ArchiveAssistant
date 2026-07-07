@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from core.ai import AIManager
 from core.database import ArchiveDatabase
 from core.export import ExportFormat
 from core.export import ExportJob
@@ -45,6 +46,7 @@ class ReviewSession:
         self.ocr_manager = OCRManager()
         self.relationship_manager = RelationshipManager(self.database)
         self.similarity_manager = SimilarityManager()
+        self.ai_manager = AIManager()
 
     @property
     def state(self):
@@ -423,6 +425,18 @@ class ReviewSession:
 
     def clear_similarity_results(self):
         self.similarity_manager.clear_results()
+
+    def ai_status(self):
+        return self.ai_manager.status()
+
+    def test_ai_connection(self):
+        return self.ai_manager.test_connection()
+
+    def list_ai_models(self):
+        return self.ai_manager.list_models()
+
+    def send_ai_test_prompt(self):
+        return self.ai_manager.send_test_prompt()
 
     def create_relationship(
         self,
