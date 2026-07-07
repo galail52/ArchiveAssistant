@@ -129,6 +129,17 @@ Additional metadata tools are available through the Command Palette:
 - Remove Relationship
 - Dual Session Review
 
+Dual Session Review dialog shortcuts:
+
+| Shortcut | Action |
+|----------|--------|
+| Tab | Switch active pane |
+| Left / A | Previous image in active pane |
+| Right / D | Next image in active pane |
+| Enter | Link current pair |
+| Ctrl + L | Link current pair |
+| Esc | Close dialog |
+
 ---
 
 # Image View

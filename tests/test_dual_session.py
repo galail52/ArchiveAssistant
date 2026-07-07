@@ -90,6 +90,11 @@ class DualSessionTests(unittest.TestCase):
                 dual_session.open_left_project(left_project)
                 dual_session.open_right_project(right_project)
 
+                self.assertEqual(
+                    dual_session.current_pair_status(),
+                    DualReviewSession.STATUS_NOT_LINKED,
+                )
+
                 relationship = dual_session.link_current_pair()
 
                 self.assertIsNotNone(relationship)
@@ -111,6 +116,10 @@ class DualSessionTests(unittest.TestCase):
                         dual_session.right_session.current_file,
                         RelationshipType.FRONT_BACK,
                     )
+                )
+                self.assertEqual(
+                    dual_session.current_pair_status(),
+                    DualReviewSession.STATUS_ALREADY_LINKED,
                 )
             finally:
                 if dual_session is not None:
@@ -137,6 +146,10 @@ class DualSessionTests(unittest.TestCase):
                 dual_session.open_left_project(project)
                 dual_session.open_right_project(project)
 
+                self.assertEqual(
+                    dual_session.current_pair_status(),
+                    DualReviewSession.STATUS_SELF_PAIR,
+                )
                 self.assertFalse(dual_session.can_link_current_pair())
                 self.assertIsNone(dual_session.link_current_pair())
                 self.assertFalse(
@@ -144,6 +157,77 @@ class DualSessionTests(unittest.TestCase):
                         dual_session.left_session.current_file,
                     )
                 )
+            finally:
+                if dual_session is not None:
+                    self.close_dual_session(dual_session)
+
+                os.chdir(original_cwd)
+
+    def test_duplicate_link_returns_existing_relationship(self):
+        original_cwd = Path.cwd()
+
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            os.chdir(temp_path)
+            dual_session = None
+
+            try:
+                left_project = self.make_project(
+                    temp_path,
+                    "fronts",
+                    ["front.jpg"],
+                )
+                right_project = self.make_project(
+                    temp_path,
+                    "backs",
+                    ["back.jpg"],
+                )
+
+                dual_session = DualReviewSession()
+                dual_session.open_left_project(left_project)
+                dual_session.open_right_project(right_project)
+
+                first = dual_session.link_current_pair()
+                second = dual_session.link_current_pair()
+
+                self.assertIsNotNone(first)
+                self.assertEqual(first.relationship_id, second.relationship_id)
+                self.assertEqual(
+                    len(
+                        dual_session.left_session.database.all_relationships()
+                    ),
+                    1,
+                )
+            finally:
+                if dual_session is not None:
+                    self.close_dual_session(dual_session)
+
+                os.chdir(original_cwd)
+
+    def test_missing_image_status_requires_both_sides(self):
+        original_cwd = Path.cwd()
+
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            os.chdir(temp_path)
+            dual_session = None
+
+            try:
+                left_project = self.make_project(
+                    temp_path,
+                    "fronts",
+                    ["front.jpg"],
+                )
+
+                dual_session = DualReviewSession()
+                dual_session.open_left_project(left_project)
+
+                self.assertEqual(
+                    dual_session.current_pair_status(),
+                    DualReviewSession.STATUS_MISSING_IMAGE,
+                )
+                self.assertFalse(dual_session.can_link_current_pair())
+                self.assertIsNone(dual_session.link_current_pair())
             finally:
                 if dual_session is not None:
                     self.close_dual_session(dual_session)

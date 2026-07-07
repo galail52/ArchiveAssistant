@@ -5,6 +5,11 @@ from core.review_session import ReviewSession
 
 
 class DualReviewSession:
+    STATUS_MISSING_IMAGE = "missing_image"
+    STATUS_SELF_PAIR = "self_pair"
+    STATUS_ALREADY_LINKED = "already_linked"
+    STATUS_NOT_LINKED = "not_linked"
+
     def __init__(self, left_session=None, right_session=None):
         self.left_session = left_session or ReviewSession()
         self.right_session = right_session or ReviewSession()
@@ -23,17 +28,19 @@ class DualReviewSession:
         )
 
     def can_link_current_pair(self):
-        left_image, right_image = self.current_pair()
-
-        return (
-            left_image is not None
-            and right_image is not None
-            and left_image != right_image
+        return self.current_pair_status() in (
+            self.STATUS_NOT_LINKED,
+            self.STATUS_ALREADY_LINKED,
         )
 
     def link_current_pair(self, notes=""):
         if not self.can_link_current_pair():
             return None
+
+        existing = self.current_pair_relationship()
+
+        if existing is not None:
+            return existing
 
         left_image, right_image = self.current_pair()
 
@@ -42,6 +49,32 @@ class DualReviewSession:
             right_image,
             RelationshipType.FRONT_BACK,
             notes,
+        )
+
+    def current_pair_status(self):
+        left_image, right_image = self.current_pair()
+
+        if left_image is None or right_image is None:
+            return self.STATUS_MISSING_IMAGE
+
+        if left_image == right_image:
+            return self.STATUS_SELF_PAIR
+
+        if self.current_pair_relationship() is not None:
+            return self.STATUS_ALREADY_LINKED
+
+        return self.STATUS_NOT_LINKED
+
+    def current_pair_relationship(self):
+        left_image, right_image = self.current_pair()
+
+        if left_image is None or right_image is None or left_image == right_image:
+            return None
+
+        return self.left_session.relationship_manager.find_relationship(
+            left_image,
+            right_image,
+            RelationshipType.FRONT_BACK,
         )
 
     def close(self):
