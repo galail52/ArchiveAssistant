@@ -19,6 +19,8 @@ from ui.dialogs.find_filename_dialog import FindFilenameDialog
 from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.dialogs.metadata_dialog import MetadataDialog
 from ui.dialogs.metadata_field_dialog import MetadataFieldDialog
+from ui.dialogs.ocr_status_dialog import OCRStatusDialog
+from ui.dialogs.smart_filter_dialog import SmartFilterDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
 from ui.keyboard_manager import KeyboardManager
@@ -163,6 +165,61 @@ class MainWindow(QMainWindow):
             CollectionHealthDialog.show_report(report, self)
         finally:
             self.focus_image_viewer()
+
+    def open_smart_filters(self):
+        if not self.has_images():
+            return
+
+        try:
+            filter_id = SmartFilterDialog.get_filter_id(
+                self.session.list_smart_filters(),
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
+
+        if filter_id is None:
+            return
+
+        matches = self.session.apply_smart_filter(filter_id)
+
+        if not matches:
+            self.show_navigation_message("No images match that smart filter")
+            self.focus_image_viewer()
+            return
+
+        self.show_navigation_message(
+            f"Smart filter matched {len(matches)} image(s)"
+        )
+        self.refresh_ui()
+
+    def show_ocr_status(self):
+        try:
+            OCRStatusDialog.show_status(
+                self.session.ocr_status(),
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
+
+    def queue_current_for_ocr(self):
+        job = self.session.queue_current_for_ocr()
+
+        if job is None:
+            self.show_navigation_message("No image selected for OCR")
+        else:
+            self.show_navigation_message("Queued current image for OCR")
+
+        self.keyboard_manager.update_enabled_states()
+        self.focus_image_viewer()
+
+    def queue_missing_ocr(self):
+        jobs = self.session.queue_missing_ocr()
+        self.show_navigation_message(
+            f"Queued {len(jobs)} image(s) for OCR"
+        )
+        self.keyboard_manager.update_enabled_states()
+        self.focus_image_viewer()
 
     def show_export_preview(self):
         result = self.session.export_preview()

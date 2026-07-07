@@ -112,6 +112,10 @@ Additional metadata tools are available through the Command Palette:
 - Delete Metadata Template
 - Export Preview / Dry Run
 - Collection Health
+- Smart Filters
+- OCR Status
+- Queue Current for OCR
+- Queue Missing OCR
 
 ---
 

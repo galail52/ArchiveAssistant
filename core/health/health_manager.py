@@ -1,51 +1,43 @@
 from core.health.health_metrics import archive_quality_score
-from core.health.health_metrics import confidence_distribution
-from core.health.health_metrics import metadata_completeness
 from core.health.health_metrics import percent
 from core.health.health_report import HealthReport
-from core.metadata import parse_people
+from core.health.providers import ConfidenceProvider
+from core.health.providers import MetadataProvider
+from core.health.providers import ReviewProvider
 
 
 class HealthManager:
-    def __init__(self, database):
+    def __init__(self, database, providers=None):
         self.database = database
+        self.providers = providers or [
+            ReviewProvider(),
+            MetadataProvider(),
+            ConfidenceProvider(),
+        ]
 
     def build_report(self, project_path):
         records = self.database.export_records(project_path)
-        total = len(records)
-        reviewed = sum(1 for record in records if record.reviewed)
-        distribution = confidence_distribution(records)
-        completeness = metadata_completeness(records)
+        metrics = {}
+
+        for provider in self.providers:
+            metrics.update(provider.collect(records))
+
+        total = metrics["total_images"]
+        reviewed = metrics["reviewed"]
+        distribution = metrics["confidence_distribution"]
+        completeness = metrics["completeness"]
 
         return HealthReport(
             total_images=total,
             reviewed=reviewed,
-            favorites=sum(
-                1 for record in records if record.review_state.favorite
-            ),
-            restore=sum(
-                1 for record in records if record.review_state.needs_restore
-            ),
-            delete=sum(
-                1 for record in records if record.review_state.delete
-            ),
-            needs_research=sum(
-                1 for record in records if record.review_state.needs_research
-            ),
-            missing_people=sum(
-                1
-                for record in records
-                if not parse_people(record.metadata.people)
-            ),
-            missing_date=sum(
-                1 for record in records if not record.metadata.date_taken.strip()
-            ),
-            missing_location=sum(
-                1 for record in records if not record.metadata.location.strip()
-            ),
-            missing_event=sum(
-                1 for record in records if not record.metadata.event.strip()
-            ),
+            favorites=metrics["favorites"],
+            restore=metrics["restore"],
+            delete=metrics["delete"],
+            needs_research=metrics["needs_research"],
+            missing_people=metrics["missing_people"],
+            missing_date=metrics["missing_date"],
+            missing_location=metrics["missing_location"],
+            missing_event=metrics["missing_event"],
             confidence_distribution=distribution,
             completeness=completeness,
             archive_quality_score=archive_quality_score(

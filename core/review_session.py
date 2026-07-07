@@ -12,8 +12,10 @@ from core.metadata_state import RECENT_METADATA_FIELDS
 from core.metadata_state import MetadataState
 from core.metadata_template_manager import MetadataTemplateManager
 from core.navigator import Navigator
+from core.ocr import OCRManager
 from core.review_snapshot import ReviewSnapshot
 from core.review_state import ReviewState
+from core.search import SmartFilterManager
 from core.view_state import ViewState
 
 
@@ -35,6 +37,8 @@ class ReviewSession:
         self.template_manager = MetadataTemplateManager(self.database)
         self.export_manager = ExportManager()
         self.health_manager = HealthManager(self.database)
+        self.smart_filter_manager = SmartFilterManager(self.database)
+        self.ocr_manager = OCRManager()
 
     @property
     def state(self):
@@ -327,6 +331,55 @@ class ReviewSession:
             return None
 
         return self.health_manager.build_report(self.images.project_path)
+
+    def list_smart_filters(self):
+        return self.smart_filter_manager.list_filters()
+
+    def smart_filter_matches(self, filter_id):
+        if self.images.project_path is None:
+            return []
+
+        return self.smart_filter_manager.matching_records(
+            self.images.project_path,
+            filter_id,
+        )
+
+    def apply_smart_filter(self, filter_id):
+        matches = self.smart_filter_matches(filter_id)
+
+        if not matches:
+            return []
+
+        first_match = matches[0]
+
+        if first_match.file_path in self.images.files:
+            self.jump_to(self.images.files.index(first_match.file_path))
+
+        return matches
+
+    def build_ocr_queue(self):
+        return self.ocr_manager.queue
+
+    def ocr_status(self):
+        return self.ocr_manager.status_counts()
+
+    def queue_current_for_ocr(self, source_type="unknown"):
+        if self.current_file is None:
+            return None
+
+        return self.ocr_manager.queue_image(
+            self.current_file,
+            source_type,
+        )
+
+    def queue_missing_ocr(self, source_type="unknown"):
+        if self.images.project_path is None:
+            return []
+
+        return self.ocr_manager.queue_missing(
+            self.export_records(),
+            source_type,
+        )
 
     def move(self, offset: int):
         return self.navigate(lambda: self.navigator.move(offset))

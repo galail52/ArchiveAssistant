@@ -185,6 +185,45 @@ class KeyboardManager:
         )
 
         self.register(
+            "search.smart_filters",
+            "Smart Filters",
+            self.window.open_smart_filters,
+            None,
+            "Search",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "ocr.status",
+            "OCR Status",
+            self.window.show_ocr_status,
+            None,
+            "OCR",
+            show_in_help=False,
+        )
+
+        self.register(
+            "ocr.queue_current",
+            "Queue Current for OCR",
+            self.window.queue_current_for_ocr,
+            None,
+            "OCR",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "ocr.queue_missing",
+            "Queue Missing OCR",
+            self.window.queue_missing_ocr,
+            None,
+            "OCR",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
             "nav.goto_image",
             "Go To Image",
             self.window.open_go_to_image,

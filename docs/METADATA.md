@@ -309,6 +309,14 @@ AI suggestions must always require human approval.
 
 Historical accuracy remains a human responsibility.
 
+Current OCR foundation:
+
+- OCR jobs can be queued from the Command Palette.
+- OCR status is available from the Command Palette.
+- No OCR engine is integrated yet.
+- OCR does not modify metadata automatically.
+- Future OCR text must require human approval before it is used as metadata.
+
 ---
 
 # Export Philosophy
