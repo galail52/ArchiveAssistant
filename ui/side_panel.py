@@ -30,9 +30,11 @@ class SidePanel(QWidget):
         self.delete = StatusCard(" Delete")
 
         self.metadata_summary = QLabel("No metadata")
+        self._metadata_summary_text = "No metadata"
         self.metadata_summary.setWordWrap(True)
         self.metadata_summary.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self.relationship_summary = QLabel("No relationships")
+        self._relationship_summary_text = "No relationships"
         self.relationship_summary.setWordWrap(True)
         self.relationship_summary.setAlignment(Qt.AlignLeft | Qt.AlignTop)
 
@@ -218,7 +220,13 @@ class SidePanel(QWidget):
 
     def update_metadata_summary(self, metadata=None):
         rows = metadata_summary_lines(metadata)
-        self.metadata_summary.setText("\n".join(rows) if rows else "No metadata")
+        text = "\n".join(rows) if rows else "No metadata"
+
+        if text == self._metadata_summary_text:
+            return
+
+        self._metadata_summary_text = text
+        self.metadata_summary.setText(text)
 
     def update_relationship_summary(self, relationships=None, current_image_id=None):
         rows = []
@@ -236,6 +244,10 @@ class SidePanel(QWidget):
             ).title()
             rows.append(f"{relationship_label}: {Path(related).name}")
 
-        self.relationship_summary.setText(
-            "\n".join(rows) if rows else "No relationships"
-        )
+        text = "\n".join(rows) if rows else "No relationships"
+
+        if text == self._relationship_summary_text:
+            return
+
+        self._relationship_summary_text = text
+        self.relationship_summary.setText(text)

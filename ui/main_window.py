@@ -22,6 +22,7 @@ from ui.dialogs.metadata_field_dialog import MetadataFieldDialog
 from ui.dialogs.ocr_status_dialog import OCRStatusDialog
 from ui.dialogs.relationship_dialog import ImageSelectionDialog
 from ui.dialogs.relationship_dialog import RelationshipSelectionDialog
+from ui.dialogs.similarity_dialog import SimilarityDialog
 from ui.dialogs.smart_filter_dialog import SmartFilterDialog
 from ui.header_panel import HeaderPanel
 from ui.image_panel import ImagePanel
@@ -199,6 +200,7 @@ class MainWindow(QMainWindow):
         try:
             OCRStatusDialog.show_status(
                 self.session.ocr_status(),
+                self.session.latest_ocr_result(),
                 self,
             )
         finally:
@@ -222,6 +224,78 @@ class MainWindow(QMainWindow):
         )
         self.keyboard_manager.update_enabled_states()
         self.focus_image_viewer()
+
+    def run_current_ocr(self):
+        result = self.session.run_current_ocr()
+
+        if result is None:
+            self.show_navigation_message("No image selected for OCR")
+            self.focus_image_viewer()
+            return
+
+        self.show_navigation_message(
+            f"OCR finished: {result.status.value}"
+        )
+
+        try:
+            OCRStatusDialog.show_status(
+                self.session.ocr_status(),
+                result,
+                self,
+            )
+        finally:
+            self.keyboard_manager.update_enabled_states()
+            self.focus_image_viewer()
+
+    def run_ocr_queue(self):
+        results = self.session.run_ocr_queue()
+
+        if not results:
+            self.show_navigation_message("No queued OCR jobs")
+            self.focus_image_viewer()
+            return
+
+        self.show_navigation_message(
+            f"Ran OCR for {len(results)} image(s)"
+        )
+
+        try:
+            OCRStatusDialog.show_status(
+                self.session.ocr_status(),
+                self.session.latest_ocr_result(),
+                self,
+            )
+        finally:
+            self.keyboard_manager.update_enabled_states()
+            self.focus_image_viewer()
+
+    def scan_image_similarity(self):
+        if not self.has_images():
+            return
+
+        groups = self.session.scan_image_similarity()
+        skipped = self.session.similarity_manager.skipped_images
+        self.show_navigation_message(
+            f"Similarity scan found {len(groups)} group(s)"
+        )
+
+        try:
+            SimilarityDialog.show_groups(groups, skipped, self)
+        finally:
+            self.keyboard_manager.update_enabled_states()
+            self.focus_image_viewer()
+
+    def view_similar_images(self):
+        groups = self.session.similarity_groups()
+
+        try:
+            SimilarityDialog.show_groups(
+                groups,
+                self.session.similarity_manager.skipped_images,
+                self,
+            )
+        finally:
+            self.focus_image_viewer()
 
     def pair_front_back(self):
         if not self.has_images():

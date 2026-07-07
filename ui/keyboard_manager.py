@@ -224,12 +224,60 @@ class KeyboardManager:
         )
 
         self.register(
+            "ocr.run_current",
+            "Run OCR on Current Image",
+            self.window.run_current_ocr,
+            None,
+            "OCR",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "ocr.run_queue",
+            "Run Queued OCR",
+            self.window.run_ocr_queue,
+            None,
+            "OCR",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "ocr.view_text",
+            "View OCR Text",
+            self.window.show_ocr_status,
+            None,
+            "OCR",
+            show_in_help=False,
+        )
+
+        self.register(
             "relationship.pair_front_back",
             "Pair Front / Back",
             self.window.pair_front_back,
             None,
             "Relationships",
             enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "similarity.scan",
+            "Image Similarity Scan",
+            self.window.scan_image_similarity,
+            None,
+            "Similarity",
+            enabled=self.window.has_images,
+            show_in_help=False,
+        )
+
+        self.register(
+            "similarity.view",
+            "View Similar Images",
+            self.window.view_similar_images,
+            None,
+            "Similarity",
             show_in_help=False,
         )
 

@@ -244,6 +244,12 @@ Unexpected failures should never silently discard metadata.
 
 Before committing:
 
+Use the Python interpreter configured for the current environment.
+
+ArchiveAssistant does not assume that a globally installed `python` command exists on PATH. This keeps verification portable across Windows desktops, Codex runtimes, virtual environments, and future packaged launchers.
+
+Use the same interpreter for unit tests, compileall, and startup verification.
+
 Application launches.
 
 Project opens.

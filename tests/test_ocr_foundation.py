@@ -12,7 +12,21 @@ from core.ocr import OCRManager
 from core.ocr import OCRQueue
 from core.ocr import OCRResult
 from core.ocr import OCRStatus
+from core.ocr.engines import OCREngineOutput
 from core.review_session import ReviewSession
+
+
+class SuccessfulEngine:
+    name = "Test OCR"
+
+    def is_available(self):
+        return True
+
+    def unavailable_reason(self):
+        return ""
+
+    def extract_text(self, _image_path):
+        return OCREngineOutput(raw_text="caption text")
 
 
 class OCRFoundationTests(unittest.TestCase):
@@ -83,17 +97,22 @@ class OCRFoundationTests(unittest.TestCase):
             "failed": 0,
         })
 
-    def test_stub_manager_returns_not_implemented_result(self):
-        manager = OCRManager()
+    def test_manager_executes_ocr_job_and_records_result(self):
+        manager = OCRManager(engine=SuccessfulEngine())
         job = manager.queue_image(Path("001.jpg"))
-        result = manager.mark_job_not_implemented(job)
+        result = manager.execute_job(job)
 
-        self.assertEqual(result.status, OCRStatus.NOT_IMPLEMENTED)
-        self.assertEqual(result.engine_name, OCRManager.STUB_ENGINE_NAME)
-        self.assertEqual(manager.status_counts(), {
+        self.assertEqual(result.status, OCRStatus.COMPLETED)
+        self.assertEqual(result.raw_text, "caption text")
+        self.assertEqual(result.engine_name, "Test OCR")
+        self.assertIsNotNone(result.executed_at)
+        self.assertEqual({
+            key: manager.status_counts()[key]
+            for key in ("pending", "completed", "failed")
+        }, {
             "pending": 0,
-            "completed": 0,
-            "failed": 1,
+            "completed": 1,
+            "failed": 0,
         })
 
     def test_queue_current_image_from_review_session(self):
@@ -172,9 +191,11 @@ class OCRFoundationTests(unittest.TestCase):
 
                 session.database.save_metadata = fail_save_metadata
 
-                job = session.queue_current_for_ocr()
+                session.ocr_manager = OCRManager(engine=SuccessfulEngine())
+                result = session.run_current_ocr()
 
-                self.assertIsNotNone(job)
+                self.assertIsNotNone(result)
+                self.assertEqual(result.raw_text, "caption text")
                 self.assertEqual(session.metadata.people, "")
             finally:
                 if session is not None:

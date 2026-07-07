@@ -65,8 +65,9 @@ Examples:
 - `ExportManager` selects the exporter for an `ExportJob`.
 - `HealthManager` gathers provider output and builds a `HealthReport`.
 - `SmartFilterManager` applies structured filters to project records.
-- `OCRManager` coordinates OCR queue planning and stub results.
+- `OCRManager` coordinates OCR queue planning and engine execution.
 - `RelationshipManager` creates, removes, and queries image relationships.
+- `SimilarityManager` coordinates image fingerprinting, comparison, and grouping.
 
 ---
 
@@ -95,6 +96,9 @@ Examples:
 - `OCRResult`
 - `Relationship`
 - `RelationshipType`
+- `ImageFingerprint`
+- `SimilarityMatch`
+- `SimilarityGroup`
 
 ---
 
@@ -241,6 +245,10 @@ Examples:
 - Smart Filters
 - OCR Status
 - Queue Current for OCR
+- Run OCR on Current Image
+- Run Queued OCR
+- Image Similarity Scan
+- View Similar Images
 - Pair Front / Back
 
 ---
@@ -328,14 +336,16 @@ They do not modify images or metadata.
 
 ## OCR
 
-OCR currently provides a non-destructive foundation.
+OCR provides a non-destructive extraction service.
 
-- `OCRManager` coordinates queue planning.
+- `OCRManager` coordinates queue planning and OCR engine execution.
+- OCR engines are isolated behind a small engine interface.
+- `TesseractEngine` is the first supported engine.
 - `OCRQueue` tracks pending and completed work in memory.
 - `OCRJob` models an OCR request.
-- `OCRResult` models OCR output or stub results.
+- `OCRResult` models OCR output, errors, warnings, and engine details.
 
-No real OCR engine is integrated yet.
+Tesseract is optional. If it is not installed, OCR reports the unavailable engine state without crashing.
 
 OCR does not write metadata automatically.
 
@@ -350,6 +360,20 @@ Relationships are a general-purpose subsystem.
 Front/back pairing is the first implemented relationship type.
 
 The subsystem is designed to support future relationships such as negative/print, original/restored, and master/derivative.
+
+## Similarity
+
+Similarity is a non-destructive foundation for finding visually related images.
+
+- `SimilarityManager` coordinates scanning, matching, and grouping.
+- `FingerprintEngine` creates deterministic local image fingerprints.
+- `ImageFingerprint` models the fingerprint for one image.
+- `SimilarityMatch` models one candidate relationship between images.
+- `SimilarityGroup` models connected candidate matches.
+
+Duplicate detection is the first consumer of similarity results.
+
+Similarity results are currently in-memory scan results. They do not modify files, metadata, review flags, or relationships.
 
 ---
 

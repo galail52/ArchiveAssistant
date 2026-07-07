@@ -12,6 +12,8 @@ class ImagePanel(QWidget):
         self.session = session
         self.current_pixmap: QPixmap | None = None
         self.current_filename: Path | None = None
+        self._transformed_pixmap: QPixmap | None = None
+        self._transform_cache_key = None
 
         self.setSizePolicy(
             QSizePolicy.Expanding,
@@ -31,14 +33,38 @@ class ImagePanel(QWidget):
 
         self.current_filename = filename
         self.current_pixmap = QPixmap(str(filename))
+        self.clear_transform_cache()
         self.update()
         return True
+
+    def clear_transform_cache(self):
+        self._transformed_pixmap = None
+        self._transform_cache_key = None
+
+    def transform_cache_key(self):
+        view = self.session.view_state
+
+        return (
+            self.current_filename,
+            self.size().width(),
+            self.size().height(),
+            view.rotation,
+            view.is_fit,
+            view.zoom_scale,
+        )
 
     def transformed_pixmap(self):
         if self.current_pixmap is None:
             return None
 
         view = self.session.view_state
+        cache_key = self.transform_cache_key()
+
+        if (
+            self._transformed_pixmap is not None
+            and self._transform_cache_key == cache_key
+        ):
+            return self._transformed_pixmap
 
         pixmap = self.current_pixmap.transformed(
             QTransform().rotate(view.rotation),
@@ -46,21 +72,28 @@ class ImagePanel(QWidget):
         )
 
         if view.is_fit:
-            return pixmap.scaled(
+            transformed = pixmap.scaled(
                 self.size() * 0.96,
                 Qt.KeepAspectRatio,
                 Qt.SmoothTransformation,
             )
+        else:
+            transformed = pixmap.scaled(
+                int(pixmap.width() * view.zoom_scale),
+                int(pixmap.height() * view.zoom_scale),
+                Qt.KeepAspectRatio,
+                Qt.SmoothTransformation,
+            )
 
-        return pixmap.scaled(
-            int(pixmap.width() * view.zoom_scale),
-            int(pixmap.height() * view.zoom_scale),
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation,
-        )
+        self._transformed_pixmap = transformed
+        self._transform_cache_key = cache_key
+        return transformed
 
     def clamp_pan(self):
         pixmap = self.transformed_pixmap()
+        self.clamp_pan_for_pixmap(pixmap)
+
+    def clamp_pan_for_pixmap(self, pixmap):
         view = self.session.view_state
 
         if pixmap is None:
@@ -84,7 +117,7 @@ class ImagePanel(QWidget):
         if pixmap is None:
             return
 
-        self.clamp_pan()
+        self.clamp_pan_for_pixmap(pixmap)
 
         view = self.session.view_state
 
@@ -95,5 +128,6 @@ class ImagePanel(QWidget):
 
     def resizeEvent(self, event):
         self.clamp_pan()
+        self.clear_transform_cache()
         self.update()
         super().resizeEvent(event)

@@ -177,6 +177,71 @@ Never:
 
 ---
 
+# Sprint Scope
+
+ArchiveAssistant follows a one logical feature per sprint philosophy.
+
+Prefer additive changes over rewrites.
+
+Preserve the existing architecture.
+
+Resist implementing adjacent features unless explicitly requested.
+
+If implementation naturally grows beyond the intended scope, stop and reassess before continuing.
+
+Documentation-only or polish sprints should typically remain under approximately 300-400 new lines of code.
+
+This is a guideline, not a strict limit.
+
+Larger implementations are acceptable when they still represent a single logical subsystem, such as OCR, Relationships, or Similarity.
+
+If additional capabilities begin appearing beyond the original sprint objective, defer them to a future sprint rather than expanding the current sprint.
+
+## Smallest Useful Feature
+
+When implementing a sprint, build the smallest version of the feature that future sprints can naturally extend.
+
+ArchiveAssistant values:
+
+- Extensible foundations
+- Incremental development
+- Small reviewable commits
+- Long-term maintainability
+
+over feature completeness.
+
+## Architecture Consistency
+
+Use the standard subsystem pattern when a feature needs a reusable core service:
+
+```
+Manager
+    ↓
+Models
+    ↓
+Optional Providers
+    ↓
+ReviewSession
+    ↓
+UI
+```
+
+Managers orchestrate.
+
+Models remain simple and immutable where practical.
+
+Helpers should be pure functions where practical.
+
+ReviewSession coordinates workflows.
+
+Dialogs remain thin.
+
+Business logic belongs in `core`.
+
+UI displays state but does not own business logic.
+
+---
+
 # User Experience Rules
 
 Every new feature should answer:
@@ -268,8 +333,16 @@ Regression prevention is more valuable than adding features quickly.
 
 Before completing a task:
 
-- Run unit tests if available.
-- Run compileall.
+- Select the Python interpreter for the current environment.
+- Do not assume `python` is available on the system PATH.
+- If running inside Codex, use the active Codex runtime interpreter.
+- If multiple interpreters are available, use the same interpreter that launches ArchiveAssistant.
+- Run unit tests if available with the selected interpreter.
+- Run compileall with the selected interpreter.
+- Launch ArchiveAssistant with the selected interpreter.
+- Verify successful startup.
+- Clean generated runtime artifacts.
+- Restore runtime-generated backup files if appropriate.
 - Never leave the repository in a non-working state.
 - Mention every file changed.
 - Mention every command executed.
@@ -285,6 +358,13 @@ When making changes:
 3. Keep changes focused.
 4. Favor readability.
 5. Respect the workflow.
+
+Before implementing a sprint, ask:
+
+- Is this still one logical feature?
+- Am I solving today's problem rather than future hypothetical problems?
+- Would this change still make sense after processing 10,000 family photographs?
+- Can this capability be extended naturally in a future sprint?
 
 ArchiveAssistant is intended to be maintained for many years.
 

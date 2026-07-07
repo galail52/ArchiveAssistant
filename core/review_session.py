@@ -18,6 +18,7 @@ from core.relationships import RelationshipType
 from core.review_snapshot import ReviewSnapshot
 from core.review_state import ReviewState
 from core.search import SmartFilterManager
+from core.similarity import SimilarityManager
 from core.view_state import ViewState
 
 
@@ -32,6 +33,7 @@ class ReviewSession:
         self.metadata_patch_clipboard = None
         self.last_snapshot = None
         self.previous_jump_index = None
+        self._stats_cache = None
 
         self.database = ArchiveDatabase(
             Path("data") / "archive.db"
@@ -42,6 +44,7 @@ class ReviewSession:
         self.smart_filter_manager = SmartFilterManager(self.database)
         self.ocr_manager = OCRManager()
         self.relationship_manager = RelationshipManager(self.database)
+        self.similarity_manager = SimilarityManager()
 
     @property
     def state(self):
@@ -57,6 +60,7 @@ class ReviewSession:
         self.metadata_state.reset()
         self.last_snapshot = None
         self.previous_jump_index = None
+        self._stats_cache = None
 
         for file_path in self.images.files:
             self.database.ensure_photo(
@@ -133,6 +137,7 @@ class ReviewSession:
 
         self.database.save_state(current, self.review_state)
         self.database.mark_last_viewed(current)
+        self._stats_cache = None
 
     def save_current_metadata(self):
         current = self.current_file
@@ -384,6 +389,41 @@ class ReviewSession:
             source_type,
         )
 
+    def run_current_ocr(self, source_type="unknown"):
+        job = self.queue_current_for_ocr(source_type)
+
+        if job is None:
+            return None
+
+        return self.ocr_manager.execute_job(job)
+
+    def run_ocr_queue(self):
+        return self.ocr_manager.run_queue()
+
+    def latest_ocr_result(self):
+        return self.ocr_manager.latest_result()
+
+    def scan_image_similarity(self):
+        if self.images.project_path is None:
+            return []
+
+        return self.similarity_manager.scan(self.images.files)
+
+    def similarity_groups(self):
+        return self.similarity_manager.candidate_groups()
+
+    def similarity_matches_for_image(self, image_id=None):
+        if image_id is None:
+            image_id = self.current_file
+
+        if image_id is None:
+            return []
+
+        return self.similarity_manager.matches_for_image(image_id)
+
+    def clear_similarity_results(self):
+        self.similarity_manager.clear_results()
+
     def create_relationship(
         self,
         source_image_id,
@@ -564,6 +604,7 @@ class ReviewSession:
 
         if self.current_file != previous_file:
             self.database.mark_reviewed(previous_file)
+            self._stats_cache = None
             self.last_snapshot = None
             self.load_current_state()
             return True
@@ -666,4 +707,9 @@ class ReviewSession:
                 "deletes": 0,
             }
 
-        return self.database.get_stats(self.images.project_path)
+        if self._stats_cache is None:
+            self._stats_cache = self.database.get_stats(
+                self.images.project_path
+            )
+
+        return self._stats_cache

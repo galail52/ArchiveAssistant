@@ -312,10 +312,12 @@ Historical accuracy remains a human responsibility.
 Current OCR foundation:
 
 - OCR jobs can be queued from the Command Palette.
+- Tesseract is the first supported OCR engine when it is installed locally.
+- OCR reports a clear unavailable status when Tesseract is not installed.
+- OCR can be run for the current image or queued images from the Command Palette.
 - OCR status is available from the Command Palette.
-- No OCR engine is integrated yet.
 - OCR does not modify metadata automatically.
-- Future OCR text must require human approval before it is used as metadata.
+- Extracted OCR text must require human approval before it is used as metadata.
 
 ---
 
