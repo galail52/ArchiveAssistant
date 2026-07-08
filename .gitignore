@@ -15,6 +15,7 @@ Desktop.ini
 
 # Database
 *.db
+*.db.backup*
 
 # Logs
 *.log

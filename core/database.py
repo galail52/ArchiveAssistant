@@ -150,6 +150,22 @@ class ArchiveDatabase:
         }
 
         migrations = {
+            "rotation": """
+                ALTER TABLE photos
+                ADD COLUMN rotation INTEGER NOT NULL DEFAULT 0
+            """,
+            "has_back": """
+                ALTER TABLE photos
+                ADD COLUMN has_back INTEGER NOT NULL DEFAULT 0
+            """,
+            "favorite": """
+                ALTER TABLE photos
+                ADD COLUMN favorite INTEGER NOT NULL DEFAULT 0
+            """,
+            "needs_restore": """
+                ALTER TABLE photos
+                ADD COLUMN needs_restore INTEGER NOT NULL DEFAULT 0
+            """,
             "reviewed": """
                 ALTER TABLE photos
                 ADD COLUMN reviewed INTEGER NOT NULL DEFAULT 0
@@ -157,6 +173,10 @@ class ArchiveDatabase:
             "needs_research": """
                 ALTER TABLE photos
                 ADD COLUMN needs_research INTEGER NOT NULL DEFAULT 0
+            """,
+            "delete_flag": """
+                ALTER TABLE photos
+                ADD COLUMN delete_flag INTEGER NOT NULL DEFAULT 0
             """,
             "people": """
                 ALTER TABLE photos
@@ -189,6 +209,18 @@ class ArchiveDatabase:
             "confidence": """
                 ALTER TABLE photos
                 ADD COLUMN confidence INTEGER NOT NULL DEFAULT 0
+            """,
+            "last_viewed": """
+                ALTER TABLE photos
+                ADD COLUMN last_viewed INTEGER NOT NULL DEFAULT 0
+            """,
+            "created_at": """
+                ALTER TABLE photos
+                ADD COLUMN created_at TEXT DEFAULT ''
+            """,
+            "updated_at": """
+                ALTER TABLE photos
+                ADD COLUMN updated_at TEXT DEFAULT ''
             """,
         }
 
