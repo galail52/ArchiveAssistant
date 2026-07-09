@@ -7,7 +7,7 @@ from core.ai.providers import OpenWebUIProvider
 
 class AIManager:
     def __init__(self, settings=None, providers=None):
-        self.settings = settings or AISettings()
+        self.settings = settings or AISettings.from_environment()
         self.providers = providers or {}
         self._last_response = None
 

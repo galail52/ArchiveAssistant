@@ -1,4 +1,5 @@
 import json
+import socket
 from abc import ABC
 from abc import abstractmethod
 from urllib.error import HTTPError
@@ -60,7 +61,7 @@ class AIProvider(ABC):
             return None, f"HTTP {error.code}: {error.reason}"
         except URLError as error:
             return None, str(error.reason)
-        except TimeoutError:
+        except (TimeoutError, socket.timeout):
             return None, "Connection timed out."
         except OSError as error:
             return None, str(error)
@@ -72,6 +73,8 @@ class AIProvider(ABC):
             return json.loads(body), ""
         except json.JSONDecodeError as error:
             return None, f"Invalid JSON response: {error}"
+        except UnicodeDecodeError as error:
+            return None, f"Invalid text response: {error}"
 
     def unavailable_response(self, message):
         return AIResponse.failure_response(

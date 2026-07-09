@@ -2,8 +2,10 @@ import os
 import sys
 import unittest
 from dataclasses import FrozenInstanceError
+from hashlib import sha256
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -11,6 +13,8 @@ from core.ai import AIManager
 from core.ai import AIRequest
 from core.ai import AIResponse
 from core.ai import AISettings
+from core.ai.providers import OllamaProvider
+from core.ai.providers import OpenWebUIProvider
 from core.review_session import ReviewSession
 
 
@@ -63,6 +67,34 @@ class ProviderWithResult:
         )
 
 
+class FakeOllamaProvider(OllamaProvider):
+    def __init__(self, settings, get_payload=None, post_payload=None, error=""):
+        super().__init__(settings)
+        self.get_payload = get_payload
+        self.post_payload = post_payload
+        self.error = error
+
+    def get_json(self, _path):
+        return self.get_payload, self.error
+
+    def post_json(self, _path, _payload):
+        return self.post_payload, self.error
+
+
+class FakeOpenWebUIProvider(OpenWebUIProvider):
+    def __init__(self, settings, get_payload=None, post_payload=None, error=""):
+        super().__init__(settings)
+        self.get_payload = get_payload
+        self.post_payload = post_payload
+        self.error = error
+
+    def get_json(self, _path):
+        return self.get_payload, self.error
+
+    def post_json(self, _path, _payload):
+        return self.post_payload, self.error
+
+
 class AIFoundationTests(unittest.TestCase):
     def make_session(self, temp_path):
         project_path = temp_path / "project"
@@ -111,6 +143,28 @@ class AIFoundationTests(unittest.TestCase):
         self.assertEqual(settings.endpoint_url, "http://localhost:11434")
         self.assertTrue(settings.enabled)
 
+    def test_ai_settings_load_from_environment(self):
+        with patch.dict(
+            os.environ,
+            {
+                "ARCHIVEASSISTANT_AI_PROVIDER": "open_webui",
+                "ARCHIVEASSISTANT_AI_ENDPOINT": "http://local-ai:3000",
+                "ARCHIVEASSISTANT_AI_MODEL": "family-history",
+                "ARCHIVEASSISTANT_AI_ENABLED": "false",
+            },
+        ):
+            settings = AISettings.from_environment()
+
+        self.assertEqual(settings.provider_type, "open_webui")
+        self.assertEqual(settings.endpoint_url, "http://local-ai:3000")
+        self.assertEqual(settings.default_model, "family-history")
+        self.assertFalse(settings.enabled)
+
+    def test_provider_defaults_match_local_adapters(self):
+        open_webui = AISettings.for_provider("open_webui")
+
+        self.assertEqual(open_webui.endpoint_url, "http://localhost:3000")
+
     def test_manager_selects_configured_provider(self):
         provider = AvailableProvider()
         manager = AIManager(
@@ -119,6 +173,13 @@ class AIFoundationTests(unittest.TestCase):
 
         self.assertIs(manager.provider(), provider)
         self.assertEqual(manager.list_models(), ["family-history"])
+
+    def test_manager_selects_open_webui_provider(self):
+        manager = AIManager(
+            settings=AISettings.for_provider("open_webui"),
+        )
+
+        self.assertIsInstance(manager.provider(), OpenWebUIProvider)
 
     def test_unavailable_provider_failure_does_not_crash(self):
         manager = AIManager(
@@ -143,6 +204,50 @@ class AIFoundationTests(unittest.TestCase):
         self.assertTrue(response.success)
         self.assertEqual(response.text, "hello")
         self.assertEqual(response.model_name, "one")
+
+    def test_ollama_provider_handles_malformed_model_response(self):
+        provider = FakeOllamaProvider(
+            AISettings(default_model="model"),
+            get_payload={"models": "not-a-list"},
+        )
+
+        models, error = provider.list_models_result()
+
+        self.assertEqual(models, [])
+        self.assertIn("Malformed Ollama", error)
+
+    def test_ollama_provider_handles_malformed_prompt_response(self):
+        provider = FakeOllamaProvider(
+            AISettings(default_model="model"),
+            post_payload={"unexpected": "shape"},
+        )
+
+        response = provider.send_request(AIRequest(prompt="hello"))
+
+        self.assertFalse(response.success)
+        self.assertIn("Malformed Ollama", response.error_message)
+
+    def test_open_webui_provider_handles_malformed_model_response(self):
+        provider = FakeOpenWebUIProvider(
+            AISettings.for_provider("open_webui", default_model="model"),
+            get_payload={"data": "not-a-list"},
+        )
+
+        models, error = provider.list_models_result()
+
+        self.assertEqual(models, [])
+        self.assertIn("Malformed Open WebUI", error)
+
+    def test_open_webui_provider_handles_malformed_prompt_response(self):
+        provider = FakeOpenWebUIProvider(
+            AISettings.for_provider("open_webui", default_model="model"),
+            post_payload={"choices": []},
+        )
+
+        response = provider.send_request(AIRequest(prompt="hello"))
+
+        self.assertFalse(response.success)
+        self.assertIn("Malformed Open WebUI", response.error_message)
 
     def test_disabled_provider_returns_structured_failure(self):
         manager = AIManager(
@@ -178,6 +283,37 @@ class AIFoundationTests(unittest.TestCase):
                 response = session.send_ai_test_prompt()
 
                 self.assertTrue(response.success)
+                self.assertEqual(session.metadata.people, "")
+            finally:
+                if session is not None:
+                    session.database.connection.close()
+
+                os.chdir(original_cwd)
+
+    def test_review_session_ai_does_not_mutate_image_file(self):
+        original_cwd = Path.cwd()
+
+        with TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            os.chdir(temp_path)
+            session = None
+
+            try:
+                session = self.make_session(temp_path)
+                image_path = session.current_file
+                before = sha256(image_path.read_bytes()).hexdigest()
+                session.ai_manager = AIManager(
+                    settings=AISettings(default_model="family-history"),
+                    providers={"ollama": AvailableProvider()},
+                )
+
+                session.test_ai_connection()
+                session.list_ai_models()
+                session.send_ai_test_prompt()
+
+                after = sha256(image_path.read_bytes()).hexdigest()
+
+                self.assertEqual(before, after)
                 self.assertEqual(session.metadata.people, "")
             finally:
                 if session is not None:

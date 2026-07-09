@@ -21,8 +21,14 @@ class OpenWebUIProvider(AIProvider):
 
         if isinstance(payload, list):
             raw_models = payload
-        else:
+        elif isinstance(payload, dict):
             raw_models = payload.get("data", [])
+        else:
+            return [], "Malformed Open WebUI model response."
+
+        if not isinstance(raw_models, list):
+            return [], "Malformed Open WebUI model response."
+
         models = []
 
         for model in raw_models:
@@ -74,7 +80,18 @@ class OpenWebUIProvider(AIProvider):
                 model_name=model_name,
             )
 
-        text = self.response_text(payload)
+        text, response_error = self.response_text_result(payload)
+
+        if response_error:
+            return AIResponse.failure_response(
+                response_error,
+                provider_name=self.provider_name,
+                model_name=model_name,
+                raw_response=payload if isinstance(payload, dict) else {
+                    "response": payload,
+                },
+            )
+
         return AIResponse.success_response(
             text=text,
             provider_name=self.provider_name,
@@ -83,10 +100,29 @@ class OpenWebUIProvider(AIProvider):
         )
 
     def response_text(self, payload):
+        text, _error = self.response_text_result(payload)
+        return text
+
+    def response_text_result(self, payload):
+        if not isinstance(payload, dict):
+            return "", "Malformed Open WebUI chat response."
+
         choices = payload.get("choices", [])
 
-        if not choices:
-            return ""
+        if not isinstance(choices, list) or not choices:
+            return "", "Malformed Open WebUI chat response."
+
+        if not isinstance(choices[0], dict):
+            return "", "Malformed Open WebUI chat response."
 
         message = choices[0].get("message", {})
-        return message.get("content", "")
+
+        if not isinstance(message, dict):
+            return "", "Malformed Open WebUI chat response."
+
+        text = message.get("content")
+
+        if not isinstance(text, str):
+            return "", "Malformed Open WebUI chat response."
+
+        return text, ""

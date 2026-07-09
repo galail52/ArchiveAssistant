@@ -19,10 +19,18 @@ class OllamaProvider(AIProvider):
         if error:
             return [], error
 
+        if not isinstance(payload, dict):
+            return [], "Malformed Ollama model response."
+
+        raw_models = payload.get("models", [])
+
+        if not isinstance(raw_models, list):
+            return [], "Malformed Ollama model response."
+
         models = [
             model.get("name", "")
-            for model in payload.get("models", [])
-            if model.get("name")
+            for model in raw_models
+            if isinstance(model, dict) and model.get("name")
         ]
         return models, ""
 
@@ -56,8 +64,26 @@ class OllamaProvider(AIProvider):
                 model_name=model_name,
             )
 
+        if not isinstance(payload, dict):
+            return AIResponse.failure_response(
+                "Malformed Ollama generation response.",
+                provider_name=self.provider_name,
+                model_name=model_name,
+                raw_response={"response": payload},
+            )
+
+        text = payload.get("response")
+
+        if not isinstance(text, str):
+            return AIResponse.failure_response(
+                "Malformed Ollama generation response.",
+                provider_name=self.provider_name,
+                model_name=model_name,
+                raw_response=payload,
+            )
+
         return AIResponse.success_response(
-            text=payload.get("response", ""),
+            text=text,
             provider_name=self.provider_name,
             model_name=model_name,
             raw_response=payload,
