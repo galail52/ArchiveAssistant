@@ -115,6 +115,24 @@ class OCRFoundationTests(unittest.TestCase):
             "failed": 0,
         })
 
+    def test_run_current_ocr_replaces_existing_result(self):
+        with TemporaryDirectory() as folder:
+            image_path = Path(folder) / "first.jpg"
+            image_path.write_bytes(b"image")
+
+            session = ReviewSession()
+            session.images.files = [image_path]
+            session.images.index = 0
+            session.ocr_manager = OCRManager(engine=SuccessfulEngine())
+
+            first = session.run_current_ocr()
+            second = session.run_current_ocr()
+
+            self.assertIsNotNone(first)
+            self.assertIsNotNone(second)
+            self.assertEqual(second.image_id, str(image_path))
+            self.assertEqual(session.ocr_status()["completed"], 1)
+
     def test_queue_current_image_from_review_session(self):
         original_cwd = Path.cwd()
 

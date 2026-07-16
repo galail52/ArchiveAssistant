@@ -9,7 +9,7 @@ class OCRQueue:
         self.pending_jobs = []
         self.results = {}
 
-    def queue_image(self, image_path, source_type="unknown"):
+    def queue_image(self, image_path, source_type="unknown", replace_existing=False):
         image_path = Path(image_path)
         image_id = str(image_path)
 
@@ -18,8 +18,11 @@ class OCRQueue:
         if existing is not None:
             return existing
 
-        if self.results.get(image_id) is not None:
+        if self.results.get(image_id) is not None and not replace_existing:
             return None
+
+        if replace_existing:
+            self.results.pop(image_id, None)
 
         job = OCRJob(
             image_id=image_id,

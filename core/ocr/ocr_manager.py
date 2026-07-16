@@ -15,8 +15,12 @@ class OCRManager:
         self.engine = engine or TesseractEngine()
         self._latest_result = None
 
-    def queue_image(self, image_path, source_type="unknown"):
-        return self.queue.queue_image(image_path, source_type)
+    def queue_image(self, image_path, source_type="unknown", replace_existing=False):
+        return self.queue.queue_image(
+            image_path,
+            source_type,
+            replace_existing=replace_existing,
+        )
 
     def queue_missing(self, records, source_type="unknown"):
         return self.queue.queue_missing(records, source_type)
