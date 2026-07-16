@@ -3,6 +3,7 @@ from core.ai.ai_response import AIResponse
 from core.ai.ai_settings import AISettings
 from core.ai.providers import OllamaProvider
 from core.ai.providers import OpenWebUIProvider
+from core.ai.providers import CompanyOSProvider
 
 
 class AIManager:
@@ -22,6 +23,8 @@ class AIManager:
 
         if provider_type in ("open_webui", "open-webui", "open webui"):
             return OpenWebUIProvider(self.settings)
+        if provider_type in ("companyos", "da-server", "daserver"):
+            return CompanyOSProvider(self.settings)
 
         return None
 

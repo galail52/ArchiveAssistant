@@ -50,6 +50,8 @@ ArchiveAssistant focuses on:
 - Quality assurance
 - Workflow efficiency
 
+Local CompanyOS integration can provide advisory OCR cleanup, photo-back interpretation, metadata candidates, archival description drafts, keyword suggestions, consistency warnings, and research questions. AI suggestions never write archive data; the archivist accepts, edits, or rejects them.
+
 ---
 
 ## Workflow
