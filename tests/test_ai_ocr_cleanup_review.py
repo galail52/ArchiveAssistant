@@ -26,6 +26,24 @@ class OCRCleanupReviewTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             OCRCleanupReview.from_result({"original_text": "raw"})
 
+    def test_accepts_cleaned_transcription_alias(self):
+        review = OCRCleanupReview.from_result({
+            "raw_ocr_text": "Chnstmas 1958",
+            "cleaned_transcription": "Christmas 1958",
+        })
+
+        self.assertEqual(review.original_text, "Chnstmas 1958")
+        self.assertEqual(review.cleaned_text, "Christmas 1958")
+
+    def test_accepts_corrected_text_alias(self):
+        review = OCRCleanupReview.from_result(
+            {"corrected_text": "Christmas 1958"},
+            fallback_original="Chnstmas 1958",
+        )
+
+        self.assertEqual(review.original_text, "Chnstmas 1958")
+        self.assertEqual(review.cleaned_text, "Christmas 1958")
+
 
 if __name__ == "__main__":
     unittest.main()
