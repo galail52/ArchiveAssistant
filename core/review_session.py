@@ -462,6 +462,28 @@ class ReviewSession:
 
         return review, ""
 
+    def add_ocr_text_to_metadata_notes(self, text):
+        cleaned = str(text or "").strip()
+        if not cleaned or self.current_file is None:
+            return False
+
+        existing = self.metadata_state.notes.strip()
+        if cleaned == existing or cleaned in self._note_blocks(existing):
+            return False
+
+        notes = cleaned if not existing else f"{existing}\n\n{cleaned}"
+        self.metadata_state = self.metadata_state.with_fields({"notes": notes})
+        self.save_current_metadata()
+        return True
+
+    @staticmethod
+    def _note_blocks(notes):
+        return {
+            block.strip()
+            for block in str(notes or "").split("\n\n")
+            if block.strip()
+        }
+
     def run_current_ocr_with_ai_cleanup(self, source_type="unknown"):
         """Run OCR, then prepare a human-reviewed AI cleanup suggestion."""
         ocr_result = self.run_current_ocr(source_type)

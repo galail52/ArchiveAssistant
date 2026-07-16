@@ -356,7 +356,13 @@ class MainWindow(QMainWindow):
 
         self.show_navigation_message("AI OCR cleanup ready for review")
         try:
-            OCRCleanupDialog.show_review(review, self)
+            action, cleaned_text = OCRCleanupDialog.show_review(review, self)
+            if action == OCRCleanupDialog.ACTION_ADD_TO_METADATA:
+                if self.session.add_ocr_text_to_metadata_notes(cleaned_text):
+                    self.show_navigation_message("Cleaned OCR added to metadata Notes")
+                    self.refresh_ui()
+                else:
+                    self.show_navigation_message("Cleaned OCR was not added")
         finally:
             self.focus_image_viewer()
 
@@ -382,7 +388,13 @@ class MainWindow(QMainWindow):
 
         self.show_navigation_message("OCR and AI cleanup ready for review")
         try:
-            OCRCleanupDialog.show_review(review, self)
+            action, cleaned_text = OCRCleanupDialog.show_review(review, self)
+            if action == OCRCleanupDialog.ACTION_ADD_TO_METADATA:
+                if self.session.add_ocr_text_to_metadata_notes(cleaned_text):
+                    self.show_navigation_message("Cleaned OCR added to metadata Notes")
+                    self.refresh_ui()
+                else:
+                    self.show_navigation_message("Cleaned OCR was not added")
         finally:
             self.focus_image_viewer()
 
