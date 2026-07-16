@@ -108,6 +108,6 @@ Clean Latest OCR with AI
 
 ArchiveAssistant sends only the latest OCR text to the configured advisory provider. The review dialog shows the original OCR beside the suggested cleanup, along with confidence, uncertainty, corrections, and warnings.
 
-The cleanup is advisory only. ArchiveAssistant does not replace the OCR source text or save metadata automatically. The archivist may copy the cleaned transcription and decide whether or where to use it.
+The cleanup is advisory only and the original OCR remains unchanged. The cleaned transcription is editable in the review dialog. The archivist may copy it or explicitly choose **Add to Metadata**, which appends the approved text to the current image's Notes field without replacing existing notes.
 
 For the normal keyboard-first workflow, press `O` or choose `Run OCR + AI Cleanup` from the Command Palette. ArchiveAssistant runs OCR on the current image and, when text is found, immediately opens the AI cleanup review. The separate OCR and cleanup commands remain available for troubleshooting.

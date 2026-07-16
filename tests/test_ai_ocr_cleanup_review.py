@@ -1,5 +1,7 @@
 import unittest
+from pathlib import Path
 from unittest.mock import Mock
+from unittest.mock import patch
 
 from core.ai import OCRCleanupReview
 from core.ocr import OCRResult, OCRStatus
@@ -99,6 +101,45 @@ class OCRCleanupReviewTests(unittest.TestCase):
     def test_error_reports_returned_fields(self):
         with self.assertRaisesRegex(ValueError, "Returned fields: explanation"):
             OCRCleanupReview.from_result({"explanation": "No transcription"})
+
+    def test_adds_approved_ocr_text_to_notes_without_replacing_existing_notes(self):
+        session = ReviewSession()
+        session.images.files = [Path("photo.jpg")]
+        session.images.index = 0
+        session.metadata_state.notes = "Existing note"
+
+        with patch.object(session, "save_current_metadata") as save:
+            added = session.add_ocr_text_to_metadata_notes("Edited transcription")
+
+        self.assertTrue(added)
+        self.assertEqual(
+            session.metadata_state.notes,
+            "Existing note\n\nEdited transcription",
+        )
+        save.assert_called_once_with()
+
+    def test_does_not_add_duplicate_ocr_text_to_notes(self):
+        session = ReviewSession()
+        session.images.files = [Path("photo.jpg")]
+        session.images.index = 0
+        session.metadata_state.notes = "Edited transcription"
+
+        with patch.object(session, "save_current_metadata") as save:
+            added = session.add_ocr_text_to_metadata_notes("Edited transcription")
+
+        self.assertFalse(added)
+        save.assert_not_called()
+
+    def test_rejects_empty_ocr_text_for_metadata(self):
+        session = ReviewSession()
+        session.images.files = [Path("photo.jpg")]
+        session.images.index = 0
+
+        with patch.object(session, "save_current_metadata") as save:
+            added = session.add_ocr_text_to_metadata_notes("   ")
+
+        self.assertFalse(added)
+        save.assert_not_called()
 
 
 if __name__ == "__main__":
