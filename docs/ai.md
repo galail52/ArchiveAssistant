@@ -95,3 +95,17 @@ The current AI commands only answer:
 ArchiveAssistant does not automatically apply AI text to metadata.
 
 Human approval remains required for any future AI-assisted metadata workflow.
+
+---
+
+# AI OCR Cleanup Review
+
+After OCR has been run on an image, use the Command Palette action:
+
+```text
+Clean Latest OCR with AI
+```
+
+ArchiveAssistant sends only the latest OCR text to the configured advisory provider. The review dialog shows the original OCR beside the suggested cleanup, along with confidence, uncertainty, corrections, and warnings.
+
+The cleanup is advisory only. ArchiveAssistant does not replace the OCR source text or save metadata automatically. The archivist may copy the cleaned transcription and decide whether or where to use it.

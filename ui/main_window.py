@@ -23,6 +23,7 @@ from ui.dialogs.jump_to_image_dialog import JumpToImageDialog
 from ui.dialogs.metadata_dialog import MetadataDialog
 from ui.dialogs.metadata_field_dialog import MetadataFieldDialog
 from ui.dialogs.ocr_status_dialog import OCRStatusDialog
+from ui.dialogs.ocr_cleanup_dialog import OCRCleanupDialog
 from ui.dialogs.relationship_dialog import ImageSelectionDialog
 from ui.dialogs.relationship_dialog import RelationshipSelectionDialog
 from ui.dialogs.similarity_dialog import SimilarityDialog
@@ -338,6 +339,25 @@ class MainWindow(QMainWindow):
             )
         finally:
             self.keyboard_manager.update_enabled_states()
+            self.focus_image_viewer()
+
+    def clean_latest_ocr_with_ai(self):
+        review, error = self.session.clean_latest_ocr_with_ai()
+
+        if review is None:
+            self.show_navigation_message(error or "AI OCR cleanup failed")
+            QMessageBox.warning(
+                self,
+                "AI OCR Cleanup",
+                error or "AI OCR cleanup failed.",
+            )
+            self.focus_image_viewer()
+            return
+
+        self.show_navigation_message("AI OCR cleanup ready for review")
+        try:
+            OCRCleanupDialog.show_review(review, self)
+        finally:
             self.focus_image_viewer()
 
     def scan_image_similarity(self):

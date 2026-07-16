@@ -45,9 +45,8 @@ class AIStatusDialog(QDialog):
         lines = [
             "AI Provider Status",
             "",
-            "AI is not connected to metadata workflows yet.",
-            "AI responses are informational only and require human approval.",
-            "AI status checks and test prompts do not modify archive data.",
+            "AI advisory features require human review.",
+            "Status checks, test prompts, and OCR cleanup do not modify archive data.",
             "",
             f"Enabled: {enabled}",
             f"Provider Type: {status.get('provider_type', '')}",
