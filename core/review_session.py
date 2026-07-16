@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from core.ai import AIManager
+from core.ai import AIManager, ArchiveAdvisoryClient, OCRCleanupReview
 from core.database import ArchiveDatabase
 from core.export import ExportFormat
 from core.export import ExportJob
@@ -47,6 +47,7 @@ class ReviewSession:
         self.relationship_manager = RelationshipManager(self.database)
         self.similarity_manager = SimilarityManager()
         self.ai_manager = AIManager()
+        self.archive_advisory = ArchiveAdvisoryClient(self.ai_manager)
 
     @property
     def state(self):
@@ -437,6 +438,29 @@ class ReviewSession:
 
     def send_ai_test_prompt(self):
         return self.ai_manager.send_test_prompt()
+
+    def clean_latest_ocr_with_ai(self):
+        ocr_result = self.latest_ocr_result()
+        if ocr_result is None or not ocr_result.raw_text.strip():
+            return None, "Run OCR on the current image before requesting cleanup."
+
+        suggestion = self.archive_advisory.run(
+            "ocr_cleanup",
+            {"raw_ocr_text": ocr_result.raw_text},
+        )
+        if not suggestion.success:
+            error = suggestion.error or {}
+            return None, error.get("message") or "AI OCR cleanup failed."
+
+        try:
+            review = OCRCleanupReview.from_result(
+                suggestion.result,
+                fallback_original=ocr_result.raw_text,
+            )
+        except ValueError as error:
+            return None, str(error)
+
+        return review, ""
 
     def create_relationship(
         self,

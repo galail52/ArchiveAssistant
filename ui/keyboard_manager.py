@@ -290,6 +290,15 @@ class KeyboardManager:
         )
 
         self.register(
+            "ai.clean_latest_ocr",
+            "Clean Latest OCR with AI",
+            self.window.clean_latest_ocr_with_ai,
+            None,
+            "AI",
+            show_in_help=False,
+        )
+
+        self.register(
             "relationship.pair_front_back",
             "Pair Front / Back",
             self.window.pair_front_back,

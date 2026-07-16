@@ -116,6 +116,7 @@ Additional metadata tools are available through the Command Palette:
 - AI Status
 - Test AI Connection
 - AI Test Prompt
+- Clean Latest OCR with AI
 - OCR Status
 - Queue Current for OCR
 - Queue Missing OCR
