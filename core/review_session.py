@@ -374,13 +374,14 @@ class ReviewSession:
     def ocr_status(self):
         return self.ocr_manager.status_counts()
 
-    def queue_current_for_ocr(self, source_type="unknown"):
+    def queue_current_for_ocr(self, source_type="unknown", replace_existing=False):
         if self.current_file is None:
             return None
 
         return self.ocr_manager.queue_image(
             self.current_file,
             source_type,
+            replace_existing=replace_existing,
         )
 
     def queue_missing_ocr(self, source_type="unknown"):
@@ -393,7 +394,10 @@ class ReviewSession:
         )
 
     def run_current_ocr(self, source_type="unknown"):
-        job = self.queue_current_for_ocr(source_type)
+        job = self.queue_current_for_ocr(
+            source_type,
+            replace_existing=True,
+        )
 
         if job is None:
             return None
