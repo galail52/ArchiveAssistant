@@ -1,6 +1,9 @@
 import unittest
+from unittest.mock import Mock
 
 from core.ai import OCRCleanupReview
+from core.ocr import OCRResult, OCRStatus
+from core.review_session import ReviewSession
 
 
 class OCRCleanupReviewTests(unittest.TestCase):
@@ -25,6 +28,41 @@ class OCRCleanupReviewTests(unittest.TestCase):
     def test_requires_cleaned_text(self):
         with self.assertRaises(ValueError):
             OCRCleanupReview.from_result({"original_text": "raw"})
+
+    def test_combined_workflow_runs_cleanup_after_successful_ocr(self):
+        session = ReviewSession.__new__(ReviewSession)
+        result = OCRResult(
+            image_id="image.png",
+            raw_text="Chnstmas 1958",
+            status=OCRStatus.COMPLETED,
+        )
+        session.run_current_ocr = Mock(return_value=result)
+        session.clean_latest_ocr_with_ai = Mock(return_value=("review", ""))
+
+        returned_result, review, error = session.run_current_ocr_with_ai_cleanup()
+
+        self.assertIs(returned_result, result)
+        self.assertEqual(review, "review")
+        self.assertEqual(error, "")
+        session.clean_latest_ocr_with_ai.assert_called_once_with()
+
+    def test_combined_workflow_stops_when_ocr_has_no_text(self):
+        session = ReviewSession.__new__(ReviewSession)
+        result = OCRResult(
+            image_id="image.png",
+            raw_text="",
+            status=OCRStatus.COMPLETED,
+            warnings=("OCR completed but returned no text.",),
+        )
+        session.run_current_ocr = Mock(return_value=result)
+        session.clean_latest_ocr_with_ai = Mock()
+
+        returned_result, review, error = session.run_current_ocr_with_ai_cleanup()
+
+        self.assertIs(returned_result, result)
+        self.assertIsNone(review)
+        self.assertIn("without extracted text", error)
+        session.clean_latest_ocr_with_ai.assert_not_called()
 
     def test_accepts_cleaned_transcription_alias(self):
         review = OCRCleanupReview.from_result({
