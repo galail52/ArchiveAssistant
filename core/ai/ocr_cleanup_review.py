@@ -15,8 +15,20 @@ class OCRCleanupReview:
         if not isinstance(result, dict):
             raise ValueError("OCR cleanup result must be a JSON object.")
 
-        original_text = str(result.get("original_text") or fallback_original)
-        cleaned_text = str(result.get("cleaned_text") or "")
+        original_text = str(
+            result.get("original_text")
+            or result.get("raw_text")
+            or result.get("raw_ocr_text")
+            or fallback_original
+        )
+        cleaned_text = str(
+            result.get("cleaned_text")
+            or result.get("cleaned_transcription")
+            or result.get("cleaned_ocr_text")
+            or result.get("corrected_text")
+            or result.get("transcription")
+            or ""
+        )
 
         if not cleaned_text.strip():
             raise ValueError("OCR cleanup result did not include cleaned text.")
