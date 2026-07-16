@@ -360,6 +360,32 @@ class MainWindow(QMainWindow):
         finally:
             self.focus_image_viewer()
 
+    def run_current_ocr_with_ai_cleanup(self):
+        result, review, error = self.session.run_current_ocr_with_ai_cleanup()
+
+        if result is None:
+            self.show_navigation_message("No image selected for OCR")
+            self.focus_image_viewer()
+            return
+
+        self.keyboard_manager.update_enabled_states()
+
+        if review is None:
+            self.show_navigation_message(error or "OCR and AI cleanup failed")
+            QMessageBox.warning(
+                self,
+                "OCR and AI Cleanup",
+                error or "OCR and AI cleanup failed.",
+            )
+            self.focus_image_viewer()
+            return
+
+        self.show_navigation_message("OCR and AI cleanup ready for review")
+        try:
+            OCRCleanupDialog.show_review(review, self)
+        finally:
+            self.focus_image_viewer()
+
     def scan_image_similarity(self):
         if not self.has_images():
             return

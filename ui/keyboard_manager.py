@@ -232,6 +232,17 @@ class KeyboardManager:
         )
 
         self.register(
+            "ocr.run_current_with_ai_cleanup",
+            "Run OCR + AI Cleanup",
+            self.window.run_current_ocr_with_ai_cleanup,
+            "O",
+            "OCR",
+            enabled=self.window.has_images,
+            help_key="O",
+            help_name="OCR + AI Cleanup",
+        )
+
+        self.register(
             "ocr.status",
             "OCR Status",
             self.window.show_ocr_status,

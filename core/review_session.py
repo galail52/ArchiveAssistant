@@ -462,6 +462,21 @@ class ReviewSession:
 
         return review, ""
 
+    def run_current_ocr_with_ai_cleanup(self, source_type="unknown"):
+        """Run OCR, then prepare a human-reviewed AI cleanup suggestion."""
+        ocr_result = self.run_current_ocr(source_type)
+        if ocr_result is None:
+            return None, None, "No image selected for OCR."
+
+        if not ocr_result.raw_text.strip():
+            error = next(iter(ocr_result.errors), "")
+            if not error:
+                error = "OCR completed without extracted text."
+            return ocr_result, None, error
+
+        review, error = self.clean_latest_ocr_with_ai()
+        return ocr_result, review, error
+
     def create_relationship(
         self,
         source_image_id,
