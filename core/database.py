@@ -24,6 +24,27 @@ class ArchiveDatabase:
         self.create_tables()
         self.migrate_tables()
 
+    def close(self):
+        connection = getattr(self, "connection", None)
+
+        if connection is None:
+            return
+
+        connection.close()
+        self.connection = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        self.close()
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
+
     def backup_database(self):
         if not self.db_path.exists():
             return
