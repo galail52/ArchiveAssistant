@@ -66,6 +66,10 @@ class MainWindow(QMainWindow):
 
         self.keyboard_manager.register_shortcuts()
 
+    def closeEvent(self, event):
+        self.session.close()
+        super().closeEvent(event)
+
         self.side_panel = SidePanel(
             review_actions={
                 "back": self.toggle_back,

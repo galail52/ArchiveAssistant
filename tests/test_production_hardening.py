@@ -33,6 +33,15 @@ class SuccessfulEngine:
 
 
 class ProductionHardeningTests(unittest.TestCase):
+
+    def test_review_session_close_releases_database_connection(self):
+        session = ReviewSession()
+        database = session.database
+
+        session.close()
+        session.close()
+
+        self.assertIsNone(database.connection)
     def write_image(self, path, color=(128, 128, 128)):
         image = Image.new("RGB", (32, 32), color)
         image.save(path)

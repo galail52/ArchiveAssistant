@@ -49,6 +49,24 @@ class ReviewSession:
         self.ai_manager = AIManager()
         self.archive_advisory = ArchiveAdvisoryClient(self.ai_manager)
 
+    def close(self):
+        database = getattr(self, "database", None)
+
+        if database is not None:
+            database.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _exc_type, _exc_value, _traceback):
+        self.close()
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
+
     @property
     def state(self):
         return self.review_state
