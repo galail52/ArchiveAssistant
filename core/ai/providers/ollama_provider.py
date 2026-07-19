@@ -48,13 +48,18 @@ class OllamaProvider(AIProvider):
         if request.system_text:
             prompt = f"{request.system_text}\n\n{prompt}"
 
+        request_payload = {
+            "model": model_name,
+            "prompt": prompt,
+            "stream": False,
+        }
+
+        if request.images:
+            request_payload["images"] = list(request.images)
+
         payload, error = self.post_json(
             "/api/generate",
-            {
-                "model": model_name,
-                "prompt": prompt,
-                "stream": False,
-            },
+            request_payload,
         )
 
         if error:

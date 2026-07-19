@@ -1,18 +1,18 @@
 from datetime import datetime
 from datetime import timezone
 
-from core.ocr.engines import TesseractEngine
+from core.ocr.engines import QwenVLOCREngine
 from core.ocr.ocr_queue import OCRQueue
 from core.ocr.ocr_result import OCRResult
 from core.ocr.ocr_status import OCRStatus
 
 
 class OCRManager:
-    DEFAULT_ENGINE_NAME = "Tesseract"
+    DEFAULT_ENGINE_NAME = "Qwen3-VL 8B"
 
     def __init__(self, queue=None, engine=None):
         self.queue = queue or OCRQueue()
-        self.engine = engine or TesseractEngine()
+        self.engine = engine or QwenVLOCREngine()
         self._latest_result = None
 
     def queue_image(self, image_path, source_type="unknown", replace_existing=False):

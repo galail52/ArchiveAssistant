@@ -73,11 +73,13 @@ class FakeOllamaProvider(OllamaProvider):
         self.get_payload = get_payload
         self.post_payload = post_payload
         self.error = error
+        self.last_post_payload = None
 
     def get_json(self, _path):
         return self.get_payload, self.error
 
     def post_json(self, _path, _payload):
+        self.last_post_payload = _payload
         return self.post_payload, self.error
 
 
@@ -226,6 +228,19 @@ class AIFoundationTests(unittest.TestCase):
 
         self.assertFalse(response.success)
         self.assertIn("Malformed Ollama", response.error_message)
+
+    def test_ollama_provider_sends_images(self):
+        provider = FakeOllamaProvider(
+            AISettings.for_provider("ollama", default_model="vision-model"),
+            post_payload={"response": "ok"},
+        )
+
+        response = provider.send_request(
+            AIRequest(prompt="read image", images=("base64-image",))
+        )
+
+        self.assertTrue(response.success)
+        self.assertEqual(provider.last_post_payload["images"], ["base64-image"])
 
     def test_open_webui_provider_handles_malformed_model_response(self):
         provider = FakeOpenWebUIProvider(
